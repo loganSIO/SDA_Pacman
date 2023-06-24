@@ -6,7 +6,7 @@ SDL_Window* pWindow = NULL;
 SDL_Surface* win_surf = NULL;
 SDL_Surface* plancheSprites = NULL;
 
-SDL_Rect src_bg = { 200, 3, 168, 216 };
+SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
 
 SDL_Rect ghost_r = { 3, 123, 16, 16 };
@@ -22,9 +22,6 @@ SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
 bool isPelletEaten = false;
-
-SDL_Color redColor = { 255, 0, 0 };  // Red color (R=255, G=0, B=0)
-
 
 int count;
 
@@ -349,7 +346,7 @@ void draw()
     {
         if (!pellets[i].eaten)
         {
-            SDL_FillRect(win_surf, &pellets[i].rect, SDL_MapRGB(win_surf->format, 37, 51, 176));
+            SDL_FillRect(win_surf, &pellets[i].rect, SDL_MapRGB(win_surf->format, 252, 188, 176));
         }
     }
 
@@ -382,92 +379,49 @@ void draw()
     SDL_SetColorKey(plancheSprites, true, 0);
     SDL_BlitScaled(plancheSprites, &ghost_in2, win_surf, &ghost);
 
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-    int direction = -1; // -1 indicates no direction
-
-    if (keys[SDL_SCANCODE_LEFT])
-    {
-        direction = SDL_SCANCODE_LEFT;
-    }
-    else if (keys[SDL_SCANCODE_RIGHT])
-    {
-        direction = SDL_SCANCODE_RIGHT;
-    }
-    else if (keys[SDL_SCANCODE_UP])
-    {
-        direction = SDL_SCANCODE_UP;
-    }
-    else if (keys[SDL_SCANCODE_DOWN])
-    {
-        direction = SDL_SCANCODE_DOWN;
-    }
-
-    SDL_Rect pacman_direction;
-    if (direction == SDL_SCANCODE_LEFT)
+SDL_Rect pacman_direction;
+    if (lastDirection == SDL_SCANCODE_LEFT)
     {
         pacman_direction = pacman_left;
     }
-    else if (direction == SDL_SCANCODE_RIGHT)
+    else if (lastDirection == SDL_SCANCODE_RIGHT)
     {
         pacman_direction = pacman_right;
     }
-    else if (direction == SDL_SCANCODE_UP)
+    else if (lastDirection == SDL_SCANCODE_UP)
     {
         pacman_direction = pacman_up;
     }
-    else if (direction == SDL_SCANCODE_DOWN)
+    else if (lastDirection == SDL_SCANCODE_DOWN)
     {
         pacman_direction = pacman_down;
     }
     else
     {
-        if (lastDirection == SDL_SCANCODE_LEFT)
-        {
-            pacman_direction = pacman_left;
-        }
-        else if (lastDirection == SDL_SCANCODE_RIGHT)
-        {
-            pacman_direction = pacman_right;
-        }
-        else if (lastDirection == SDL_SCANCODE_UP)
-        {
-            pacman_direction = pacman_up;
-        }
-        else if (lastDirection == SDL_SCANCODE_DOWN)
-        {
-            pacman_direction = pacman_down;
-        }
-        else
-        {
-            pacman_direction = pacman_closed;
-        }
+        pacman_direction = pacman_closed;
     }
 
-    if (direction != -1)
+    SDL_Rect nextPosition = pacman;
+    switch (lastDirection)
     {
-        SDL_Rect nextPosition = pacman;
-        switch (direction)
-        {
-        case SDL_SCANCODE_LEFT:
-            nextPosition.x--;
-            break;
-        case SDL_SCANCODE_RIGHT:
-            nextPosition.x++;
-            break;
-        case SDL_SCANCODE_UP:
-            nextPosition.y--;
-            break;
-        case SDL_SCANCODE_DOWN:
-            nextPosition.y++;
-            break;
-        }
+    case SDL_SCANCODE_LEFT:
+        nextPosition.x--;
+        break;
+    case SDL_SCANCODE_RIGHT:
+        nextPosition.x++;
+        break;
+    case SDL_SCANCODE_UP:
+        nextPosition.y--;
+        break;
+    case SDL_SCANCODE_DOWN:
+        nextPosition.y++;
+        break;
+    }
 
-        // Check collision with solid walls before updating Pacman's position
-        if (!checkCollision(nextPosition))
-        {
-            pacman = nextPosition;
-            lastDirection = direction;
-        }
+    // Check collision with solid walls before updating Pacman's position
+    if (!checkCollision(nextPosition))
+    {
+        pacman = nextPosition;
     }
 
     SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
@@ -493,6 +447,19 @@ int main(int argc, char** argv)
             {
             case SDL_QUIT:
                 quit = true;
+                break;
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.scancode)
+                {
+                case SDL_SCANCODE_LEFT:
+                case SDL_SCANCODE_RIGHT:
+                case SDL_SCANCODE_UP:
+                case SDL_SCANCODE_DOWN:
+                    lastDirection = event.key.keysym.scancode;
+                    break;
+                default:
+                    break;
+                }
                 break;
             default:
                 break;
