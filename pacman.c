@@ -21,12 +21,15 @@ SDL_Rect pacman_left = { 46, 90, 16, 16 };
 SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
+bool isPelletEaten = false;
+
 int count;
 
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
 #define NUM_WALLS 43
+#define NUM_PELLETS 200
 
 SDL_Rect walls[NUM_WALLS] = {
     // { x, y, w, h }
@@ -79,6 +82,37 @@ SDL_Rect walls[NUM_WALLS] = {
     { 270, 458, 112, 22 }, // middle rectangle bottom
 };
 
+typedef struct {
+    SDL_Rect rect;
+    bool eaten;
+} Pellet;
+
+Pellet pellets[NUM_PELLETS] = {
+    { { 176, 48, 8, 8 }, false },
+    { { 176, 80, 8, 8 }, false },
+    { { 176, 112, 8, 8 }, false },
+    { { 176, 144, 8, 8 }, false },
+    { { 176, 176, 8, 8 }, false },
+    { { 176, 208, 8, 8 }, false },
+    { { 176, 240, 8, 8 }, false },
+    { { 176, 272, 8, 8 }, false },
+    { { 176, 304, 8, 8 }, false },
+    { { 176, 336, 8, 8 }, false },
+    { { 176, 368, 8, 8 }, false },
+    { { 176, 400, 8, 8 }, false },
+    { { 176, 432, 8, 8 }, false },
+    { { 176, 464, 8, 8 }, false },
+    { { 176, 496, 8, 8 }, false },
+    { { 176, 528, 8, 8 }, false },
+    { { 176, 560, 8, 8 }, false },
+    { { 176, 592, 8, 8 }, false },
+    { { 176, 624, 8, 8 }, false },
+    { { 176, 656, 8, 8 }, false },
+    { { 176, 688, 8, 8 }, false },
+    { { 176, 720, 8, 8 }, false },
+    { { 176, 752, 8, 8 }, false },
+};
+
 bool checkCollision(SDL_Rect rect)
 {
     // Check if the given rectangle collides with any of the walls
@@ -91,6 +125,16 @@ bool checkCollision(SDL_Rect rect)
         }
     }
 
+    // Check collision with the pellet
+    for (int i = 0; i < NUM_WALLS; i++)
+    {
+        if (!pellets[i].eaten && SDL_HasIntersection(&rect, &pellets[i].rect) == SDL_TRUE)
+        {
+            // Pellet has been eaten
+            pellets[i].eaten = true;
+            isPelletEaten = true;
+        }
+    }
     // No collision detected
     return false;
 }
@@ -108,6 +152,15 @@ void draw()
 {
     SDL_SetColorKey(plancheSprites, false, 0);
     SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
+
+    // Draw the pellet if it hasn't been eaten
+    for (int i = 0; i < NUM_PELLETS; i++)
+    {
+        if (!pellets[i].eaten)
+        {
+            SDL_FillRect(win_surf, &pellets[i].rect, SDL_MapRGB(win_surf->format, 255, 255, 255));
+        }
+    }
 
     SDL_Rect* ghost_in = NULL;
     switch (count / 128)
