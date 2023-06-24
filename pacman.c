@@ -26,7 +26,7 @@ int count;
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
-#define NUM_WALLS 13
+#define NUM_WALLS 32
 
 SDL_Rect walls[NUM_WALLS] = {
     // { x, y, w, h }
@@ -45,6 +45,26 @@ SDL_Rect walls[NUM_WALLS] = {
     { 198, 202, 26, 218 }, // first y line
     { 240, 296, 46, 30 }, // first x line
     { 198, 462, 26, 112 }, // first y line
+    { 198, 620, 92, 22 }, // first x line
+    { 74, 620, 88, 24 }, // first inversed L x axis
+    { 140, 640, 22, 92 }, // first inversed L y axis
+    { 198, 680, 26, 120 }, // second y line
+    { 74, 780, 212, 24 }, // second y line
+    // Mirrored lines on the right side
+    { 680 - 22 - 138, 292, 138, 126 }, // First rectangle
+    { 680 - 22 - 138, 455, 138, 128 }, // Second rectangle
+    { 680 - 22 - 74, 678, 74, 62 },     // Third rectangle
+    { 680 - 66 - 78, 70, 70, 92 },      // First block
+    { 680 - 66 - 78, 202, 70, 50 },     // Second rectangle block
+    { 680 - 198 - 92, 70, 92, 92 },     // Second block
+    { 680 - 198 - 26, 202, 26, 218 },   // First y line
+    { 680 - 240 - 46, 296, 46, 30 },    // First x line
+    { 680 - 198 - 26, 462, 26, 112 },   // Second y line
+    { 680 - 198 - 92, 620, 92, 22 },    // First x line
+    { 680 - 74 - 88, 620, 88, 24 },     // First inversed L x axis
+    { 680 - 140 - 22, 640, 22, 92 },    // First inversed L y axis
+    { 680 - 198 - 26, 680, 26, 120 },   // Second y line
+    { 680 - 74 - 212, 780, 212, 24 }    // Second y line
 };
 
 bool checkCollision(SDL_Rect rect)
