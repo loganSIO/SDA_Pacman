@@ -26,7 +26,7 @@ int count;
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
-#define NUM_WALLS 32
+#define NUM_WALLS 43
 
 SDL_Rect walls[NUM_WALLS] = {
     // { x, y, w, h }
@@ -44,8 +44,8 @@ SDL_Rect walls[NUM_WALLS] = {
     { 198, 70, 92, 92 }, // second block
     { 198, 202, 26, 218 }, // first y line
     { 240, 296, 46, 30 }, // first x line
-    { 198, 462, 26, 112 }, // first y line
-    { 198, 620, 92, 22 }, // first x line
+    { 198, 462, 26, 112 }, // second y line
+    { 198, 620, 92, 22 }, // second x line
     { 74, 620, 88, 24 }, // first inversed L x axis
     { 140, 640, 22, 92 }, // first inversed L y axis
     { 198, 680, 26, 120 }, // second y line
@@ -64,7 +64,19 @@ SDL_Rect walls[NUM_WALLS] = {
     { 680 - 74 - 88, 620, 88, 24 },     // First inversed L x axis
     { 680 - 140 - 22, 640, 22, 92 },    // First inversed L y axis
     { 680 - 198 - 26, 680, 26, 120 },   // Second y line
-    { 680 - 74 - 212, 780, 212, 24 }    // Second y line
+    { 680 - 74 - 212, 780, 212, 24 },    // Second y line
+    // Middle of the map
+    { 333, 30, 22, 130 }, // first middle line
+    { 270, 202, 140, 62 }, // first rectangle line
+    { 333, 214, 22, 112 }, // first middle line
+    { 270, 678, 140, 62 }, // last rectangle line
+    { 333, 690, 22, 112 }, // last middle line
+    { 270, 522, 140, 62 }, // third rectangle line
+    { 333, 530, 22, 112 }, // third middle line
+
+    { 270, 368, 22, 112 }, // middle rectangle left
+    { 388, 368, 22, 112 }, // middle rectangle right
+    { 270, 458, 112, 22 }, // middle rectangle bottom
 };
 
 bool checkCollision(SDL_Rect rect)
