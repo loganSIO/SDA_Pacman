@@ -98,6 +98,7 @@ Pacman_EXTERNAL_OBJECTS =
 
 Pacman: CMakeFiles/Pacman.dir/pacman.c.o
 Pacman: CMakeFiles/Pacman.dir/build.make
+Pacman: /usr/lib/x86_64-linux-gnu/libSDL2_ttf.so
 Pacman: CMakeFiles/Pacman.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan/build/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable Pacman"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Pacman.dir/link.txt --verbose=$(VERBOSE)

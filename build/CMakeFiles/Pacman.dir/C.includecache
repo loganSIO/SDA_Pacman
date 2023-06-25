@@ -9,6 +9,12 @@
 /media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan/pacman.c
 SDL.h
 -
+SDL_ttf.h
+-
+unistd.h
+-
+libgen.h
+-
 stdio.h
 -
 stdbool.h
@@ -623,6 +629,14 @@ SDL_error.h
 /usr/include/SDL2/SDL_error.h
 SDL_video.h
 /usr/include/SDL2/SDL_video.h
+begin_code.h
+/usr/include/SDL2/begin_code.h
+close_code.h
+/usr/include/SDL2/close_code.h
+
+/usr/include/SDL2/SDL_ttf.h
+SDL.h
+/usr/include/SDL2/SDL.h
 begin_code.h
 /usr/include/SDL2/begin_code.h
 close_code.h

@@ -1,10 +1,14 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
+#include <unistd.h>
+#include <libgen.h> // For dirname function
 #include <stdio.h>
 #include <stdbool.h>
 
 SDL_Window* pWindow = NULL;
 SDL_Surface* win_surf = NULL;
 SDL_Surface* plancheSprites = NULL;
+TTF_Font* font = NULL;
 
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
@@ -22,14 +26,13 @@ SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
 bool isPelletEaten = false;
-
 int count;
 
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
 #define NUM_WALLS 43
-#define NUM_PELLETS 200
+#define NUM_PELLETS 1
 
 SDL_Rect walls[NUM_WALLS] = {
     // { x, y, w, h }
@@ -88,218 +91,221 @@ typedef struct {
 } Pellet;
 
 Pellet pellets[NUM_PELLETS] = {
-    { { 176, 48, 8, 8 }, false },
-    { { 176, 80, 8, 8 }, false },
-    { { 176, 112, 8, 8 }, false },
-    { { 176, 144, 8, 8 }, false },
-    { { 176, 176, 8, 8 }, false },
-    { { 176, 208, 8, 8 }, false },
-    { { 176, 240, 8, 8 }, false },
-    { { 176, 272, 8, 8 }, false },
-    { { 176, 304, 8, 8 }, false },
-    { { 176, 336, 8, 8 }, false },
-    { { 176, 368, 8, 8 }, false },
-    { { 176, 400, 8, 8 }, false },
-    { { 176, 432, 8, 8 }, false },
-    { { 176, 464, 8, 8 }, false },
-    { { 176, 496, 8, 8 }, false },
-    { { 176, 528, 8, 8 }, false },
-    { { 176, 560, 8, 8 }, false },
-    { { 176, 592, 8, 8 }, false },
-    { { 176, 624, 8, 8 }, false },
-    { { 176, 656, 8, 8 }, false },
-    { { 176, 688, 8, 8 }, false },
-    { { 176, 720, 8, 8 }, false },
-    { { 176, 752, 8, 8 }, false },
+    // { { 176, 48, 8, 8 }, false },
+    // { { 176, 80, 8, 8 }, false },
+    // { { 176, 112, 8, 8 }, false },
+    // { { 176, 144, 8, 8 }, false },
+    // { { 176, 176, 8, 8 }, false },
+    // { { 176, 208, 8, 8 }, false },
+    // { { 176, 240, 8, 8 }, false },
+    // { { 176, 272, 8, 8 }, false },
+    // { { 176, 304, 8, 8 }, false },
+    // { { 176, 336, 8, 8 }, false },
+    // { { 176, 368, 8, 8 }, false },
+    // { { 176, 400, 8, 8 }, false },
+    // { { 176, 432, 8, 8 }, false },
+    // { { 176, 464, 8, 8 }, false },
+    // { { 176, 496, 8, 8 }, false },
+    // { { 176, 528, 8, 8 }, false },
+    // { { 176, 560, 8, 8 }, false },
+    // { { 176, 592, 8, 8 }, false },
+    // { { 176, 624, 8, 8 }, false },
+    // { { 176, 656, 8, 8 }, false },
+    // { { 176, 688, 8, 8 }, false },
+    // { { 176, 720, 8, 8 }, false },
+    // { { 176, 752, 8, 8 }, false },
 
-    { { 48, 176, 8, 8 }, false },
-    { { 80, 176, 8, 8 }, false },
-    { { 112, 176, 8, 8 }, false },
-    { { 144, 176, 8, 8 }, false },
-    { { 176, 176, 8, 8 }, false },
-    { { 208, 176, 8, 8 }, false },
-    { { 240, 176, 8, 8 }, false },
-    { { 272, 176, 8, 8 }, false },
-    { { 304, 176, 8, 8 }, false },
-    { { 336, 176, 8, 8 }, false },
-    { { 368, 176, 8, 8 }, false },
-    { { 400, 176, 8, 8 }, false },
-    { { 432, 176, 8, 8 }, false },
-    { { 464, 176, 8, 8 }, false },
-    { { 496, 176, 8, 8 }, false },
-    { { 528, 176, 8, 8 }, false },
-    { { 560, 176, 8, 8 }, false },
-    { { 592, 176, 8, 8 }, false },
-    { { 624, 176, 8, 8 }, false },
+    // { { 48, 176, 8, 8 }, false },
+    // { { 80, 176, 8, 8 }, false },
+    // { { 112, 176, 8, 8 }, false },
+    // { { 144, 176, 8, 8 }, false },
+    // { { 176, 176, 8, 8 }, false },
+    // { { 208, 176, 8, 8 }, false },
+    // { { 240, 176, 8, 8 }, false },
+    // { { 272, 176, 8, 8 }, false },
+    // { { 304, 176, 8, 8 }, false },
+    // { { 336, 176, 8, 8 }, false },
+    // { { 368, 176, 8, 8 }, false },
+    // { { 400, 176, 8, 8 }, false },
+    // { { 432, 176, 8, 8 }, false },
+    // { { 464, 176, 8, 8 }, false },
+    // { { 496, 176, 8, 8 }, false },
+    // { { 528, 176, 8, 8 }, false },
+    // { { 560, 176, 8, 8 }, false },
+    // { { 592, 176, 8, 8 }, false },
+    // { { 624, 176, 8, 8 }, false },
 
-    { { 48, 48, 8, 8 }, false },
-    { { 48, 80, 8, 8 }, false },
-    { { 48, 144, 8, 8 }, false },
-    { { 48, 176, 8, 8 }, false },
-    { { 48, 208, 8, 8 }, false },
-    { { 48, 240, 8, 8 }, false },
-    { { 48, 272, 8, 8 }, false },
+    // { { 48, 48, 8, 8 }, false },
+    // { { 48, 80, 8, 8 }, false },
+    // { { 48, 144, 8, 8 }, false },
+    // { { 48, 176, 8, 8 }, false },
+    // { { 48, 208, 8, 8 }, false },
+    // { { 48, 240, 8, 8 }, false },
+    // { { 48, 272, 8, 8 }, false },
 
-    { { 80, 48, 8, 8 }, false },
-    { { 112, 48, 8, 8 }, false },
-    { { 144, 48, 8, 8 }, false },
-    { { 208, 48, 8, 8 }, false },
-    { { 240, 48, 8, 8 }, false },
-    { { 272, 48, 8, 8 }, false },
-    { { 304, 48, 8, 8 }, false },
+    // { { 80, 48, 8, 8 }, false },
+    // { { 112, 48, 8, 8 }, false },
+    // { { 144, 48, 8, 8 }, false },
+    // { { 208, 48, 8, 8 }, false },
+    // { { 240, 48, 8, 8 }, false },
+    // { { 272, 48, 8, 8 }, false },
+    // { { 304, 48, 8, 8 }, false },
 
-    { { 304, 80, 8, 8 }, false },
-    { { 304, 112, 8, 8 }, false },
-    { { 304, 144, 8, 8 }, false },
+    // { { 304, 80, 8, 8 }, false },
+    // { { 304, 112, 8, 8 }, false },
+    // { { 304, 144, 8, 8 }, false },
 
-    { { 368, 48, 8, 8 }, false },
-    { { 400, 48, 8, 8 }, false },
-    { { 432, 48, 8, 8 }, false },
-    { { 464, 48, 8, 8 }, false },
-    { { 496, 48, 8, 8 }, false },
-    { { 528, 48, 8, 8 }, false },
-    { { 560, 48, 8, 8 }, false },
-    { { 592, 48, 8, 8 }, false },
-    { { 624, 48, 8, 8 }, false },
+    // { { 368, 48, 8, 8 }, false },
+    // { { 400, 48, 8, 8 }, false },
+    // { { 432, 48, 8, 8 }, false },
+    // { { 464, 48, 8, 8 }, false },
+    // { { 496, 48, 8, 8 }, false },
+    // { { 528, 48, 8, 8 }, false },
+    // { { 560, 48, 8, 8 }, false },
+    // { { 592, 48, 8, 8 }, false },
+    // { { 624, 48, 8, 8 }, false },
 
-    { { 368, 80, 8, 8 }, false },
-    { { 368, 112, 8, 8 }, false },
-    { { 368, 144, 8, 8 }, false },
+    // { { 368, 80, 8, 8 }, false },
+    // { { 368, 112, 8, 8 }, false },
+    // { { 368, 144, 8, 8 }, false },
 
-    { { 496, 80, 8, 8 }, false },
-    { { 496, 112, 8, 8 }, false },
-    { { 496, 144, 8, 8 }, false },
-    { { 496, 176, 8, 8 }, false },
-    { { 496, 208, 8, 8 }, false },
-    { { 496, 240, 8, 8 }, false },
-    { { 496, 272, 8, 8 }, false },
-    { { 496, 304, 8, 8 }, false },
-    { { 496, 336, 8, 8 }, false },
-    { { 496, 368, 8, 8 }, false },
-    { { 496, 400, 8, 8 }, false },
-    { { 496, 432, 8, 8 }, false },
-    { { 496, 464, 8, 8 }, false },
-    { { 496, 496, 8, 8 }, false },
-    { { 496, 528, 8, 8 }, false },
-    { { 496, 560, 8, 8 }, false },
-    { { 496, 592, 8, 8 }, false },
-    { { 496, 624, 8, 8 }, false },
-    { { 496, 656, 8, 8 }, false },
-    { { 496, 688, 8, 8 }, false },
-    { { 496, 720, 8, 8 }, false },
-    { { 496, 752, 8, 8 }, false },
+    // { { 496, 80, 8, 8 }, false },
+    // { { 496, 112, 8, 8 }, false },
+    // { { 496, 144, 8, 8 }, false },
+    // { { 496, 176, 8, 8 }, false },
+    // { { 496, 208, 8, 8 }, false },
+    // { { 496, 240, 8, 8 }, false },
+    // { { 496, 272, 8, 8 }, false },
+    // { { 496, 304, 8, 8 }, false },
+    // { { 496, 336, 8, 8 }, false },
+    // { { 496, 368, 8, 8 }, false },
+    // { { 496, 400, 8, 8 }, false },
+    // { { 496, 432, 8, 8 }, false },
+    // { { 496, 464, 8, 8 }, false },
+    // { { 496, 496, 8, 8 }, false },
+    // { { 496, 528, 8, 8 }, false },
+    // { { 496, 560, 8, 8 }, false },
+    // { { 496, 592, 8, 8 }, false },
+    // { { 496, 624, 8, 8 }, false },
+    // { { 496, 656, 8, 8 }, false },
+    // { { 496, 688, 8, 8 }, false },
+    // { { 496, 720, 8, 8 }, false },
+    // { { 496, 752, 8, 8 }, false },
 
-    { { 80, 272, 8, 8 }, false },
-    { { 112, 272, 8, 8 }, false },
-    { { 144, 272, 8, 8 }, false },
-    { { 240, 272, 8, 8 }, false },
-    { { 272, 272, 8, 8 }, false },
-    { { 304, 272, 8, 8 }, false },
-    { { 368, 272, 8, 8 }, false },
-    { { 400, 272, 8, 8 }, false },
-    { { 432, 272, 8, 8 }, false },
-    { { 528, 272, 8, 8 }, false },
-    { { 560, 272, 8, 8 }, false },
-    { { 592, 272, 8, 8 }, false },
-    { { 624, 272, 8, 8 }, false },
-    // Last Column
-    { { 624, 80, 8, 8 }, false },
-    { { 624, 144, 8, 8 }, false },
-    { { 624, 176, 8, 8 }, false },
-    { { 624, 208, 8, 8 }, false },
-    { { 624, 240, 8, 8 }, false },
-    { { 624, 592, 8, 8 }, false },
-    { { 624, 624, 8, 8 }, false },
-    { { 624, 752, 8, 8 }, false },
-    { { 624, 784, 8, 8 }, false },
-    { { 624, 816, 8, 8 }, false },
+    // { { 80, 272, 8, 8 }, false },
+    // { { 112, 272, 8, 8 }, false },
+    // { { 144, 272, 8, 8 }, false },
+    // { { 240, 272, 8, 8 }, false },
+    // { { 272, 272, 8, 8 }, false },
+    // { { 304, 272, 8, 8 }, false },
+    // { { 368, 272, 8, 8 }, false },
+    // { { 400, 272, 8, 8 }, false },
+    // { { 432, 272, 8, 8 }, false },
+    // { { 528, 272, 8, 8 }, false },
+    // { { 560, 272, 8, 8 }, false },
+    // { { 592, 272, 8, 8 }, false },
+    // { { 624, 272, 8, 8 }, false },
+    // // Last Column
+    // { { 624, 80, 8, 8 }, false },
+    // { { 624, 144, 8, 8 }, false },
+    // { { 624, 176, 8, 8 }, false },
+    // { { 624, 208, 8, 8 }, false },
+    // { { 624, 240, 8, 8 }, false },
+    // { { 624, 592, 8, 8 }, false },
+    // { { 624, 624, 8, 8 }, false },
+    // { { 624, 752, 8, 8 }, false },
+    // { { 624, 784, 8, 8 }, false },
+    // { { 624, 816, 8, 8 }, false },
 
-    { { 240, 208, 8, 8 }, false },
-    { { 240, 240, 8, 8 }, false },
-    { { 432, 208, 8, 8 }, false },
-    { { 432, 240, 8, 8 }, false },
+    // { { 240, 208, 8, 8 }, false },
+    // { { 240, 240, 8, 8 }, false },
+    // { { 432, 208, 8, 8 }, false },
+    // { { 432, 240, 8, 8 }, false },
 
-    { { 528, 592, 8, 8 }, false },
-    { { 560, 592, 8, 8 }, false },
-    { { 592, 592, 8, 8 }, false },
-    { { 464, 592, 8, 8 }, false },
-    { { 432, 592, 8, 8 }, false },
-    { { 400, 592, 8, 8 }, false },
-    { { 368, 592, 8, 8 }, false },
-    { { 304, 592, 8, 8 }, false },
-    { { 272, 592, 8, 8 }, false },
-    { { 240, 592, 8, 8 }, false },
-    { { 208, 592, 8, 8 }, false },
-    { { 144, 592, 8, 8 }, false },
-    { { 112, 592, 8, 8 }, false },
-    { { 80, 592, 8, 8 }, false },
-    { { 48, 592, 8, 8 }, false },
+    // { { 528, 592, 8, 8 }, false },
+    // { { 560, 592, 8, 8 }, false },
+    // { { 592, 592, 8, 8 }, false },
+    // { { 464, 592, 8, 8 }, false },
+    // { { 432, 592, 8, 8 }, false },
+    // { { 400, 592, 8, 8 }, false },
+    // { { 368, 592, 8, 8 }, false },
+    // { { 304, 592, 8, 8 }, false },
+    // { { 272, 592, 8, 8 }, false },
+    // { { 240, 592, 8, 8 }, false },
+    // { { 208, 592, 8, 8 }, false },
+    // { { 144, 592, 8, 8 }, false },
+    // { { 112, 592, 8, 8 }, false },
+    // { { 80, 592, 8, 8 }, false },
+    // { { 48, 592, 8, 8 }, false },
 
-    { { 48, 624, 8, 8 }, false },
-    { { 304, 624, 8, 8 }, false },
-    { { 368, 624, 8, 8 }, false },
+    // { { 48, 624, 8, 8 }, false },
+    // { { 304, 624, 8, 8 }, false },
+    // { { 368, 624, 8, 8 }, false },
 
-    { { 80, 656, 8, 8 }, false },
-    { { 112, 656, 8, 8 }, false },
-    { { 208, 656, 8, 8 }, false },
-    { { 240, 656, 8, 8 }, false },
-    { { 272, 656, 8, 8 }, false },
-    { { 304, 656, 8, 8 }, false },
-    { { 368, 656, 8, 8 }, false },
-    { { 400, 656, 8, 8 }, false },
-    { { 432, 656, 8, 8 }, false },
-    { { 464, 656, 8, 8 }, false },
-    { { 560, 656, 8, 8 }, false },
-    { { 592, 656, 8, 8 }, false },
+    // { { 80, 656, 8, 8 }, false },
+    // { { 112, 656, 8, 8 }, false },
+    // { { 208, 656, 8, 8 }, false },
+    // { { 240, 656, 8, 8 }, false },
+    // { { 272, 656, 8, 8 }, false },
+    // { { 304, 656, 8, 8 }, false },
+    // { { 368, 656, 8, 8 }, false },
+    // { { 400, 656, 8, 8 }, false },
+    // { { 432, 656, 8, 8 }, false },
+    // { { 464, 656, 8, 8 }, false },
+    // { { 560, 656, 8, 8 }, false },
+    // { { 592, 656, 8, 8 }, false },
 
-    { { 560, 688, 8, 8 }, false },
-    { { 432, 688, 8, 8 }, false },
-    { { 240, 688, 8, 8 }, false },
-    { { 112, 688, 8, 8 }, false },
+    // { { 560, 688, 8, 8 }, false },
+    // { { 432, 688, 8, 8 }, false },
+    // { { 240, 688, 8, 8 }, false },
+    // { { 112, 688, 8, 8 }, false },
 
-    { { 112, 720, 8, 8 }, false },
-    { { 240, 720, 8, 8 }, false },
-    { { 432, 720, 8, 8 }, false },
-    { { 560, 720, 8, 8 }, false },
+    // { { 112, 720, 8, 8 }, false },
+    // { { 240, 720, 8, 8 }, false },
+    // { { 432, 720, 8, 8 }, false },
+    // { { 560, 720, 8, 8 }, false },
 
-    { { 592, 752, 8, 8 }, false },
-    { { 560, 752, 8, 8 }, false },
-    { { 528, 752, 8, 8 }, false },
-    { { 432, 752, 8, 8 }, false },
-    { { 400, 752, 8, 8 }, false },
-    { { 368, 752, 8, 8 }, false },
-    { { 304, 752, 8, 8 }, false },
-    { { 272, 752, 8, 8 }, false },
-    { { 240, 752, 8, 8 }, false },
-    { { 144, 752, 8, 8 }, false },
-    { { 112, 752, 8, 8 }, false },
-    { { 80, 752, 8, 8 }, false },
-    { { 48, 752, 8, 8 }, false },
+    // { { 592, 752, 8, 8 }, false },
+    // { { 560, 752, 8, 8 }, false },
+    // { { 528, 752, 8, 8 }, false },
+    // { { 432, 752, 8, 8 }, false },
+    // { { 400, 752, 8, 8 }, false },
+    // { { 368, 752, 8, 8 }, false },
+    // { { 304, 752, 8, 8 }, false },
+    // { { 272, 752, 8, 8 }, false },
+    // { { 240, 752, 8, 8 }, false },
+    // { { 144, 752, 8, 8 }, false },
+    // { { 112, 752, 8, 8 }, false },
+    // { { 80, 752, 8, 8 }, false },
+    // { { 48, 752, 8, 8 }, false },
 
-    { { 48, 784, 8, 8 }, false },
-    { { 304, 784, 8, 8 }, false },
-    { { 368, 784, 8, 8 }, false },
+    // { { 48, 784, 8, 8 }, false },
+    // { { 304, 784, 8, 8 }, false },
+    // { { 368, 784, 8, 8 }, false },
 
-    { { 48, 816, 8, 8 }, false },
-    { { 80, 816, 8, 8 }, false },
-    { { 112, 816, 8, 8 }, false },
-    { { 144, 816, 8, 8 }, false },
-    { { 176, 816, 8, 8 }, false },
-    { { 208, 816, 8, 8 }, false },
-    { { 240, 816, 8, 8 }, false },
-    { { 272, 816, 8, 8 }, false },
-    { { 304, 816, 8, 8 }, false },
-    { { 336, 816, 8, 8 }, false },
-    { { 368, 816, 8, 8 }, false },
-    { { 400, 816, 8, 8 }, false },
-    { { 432, 816, 8, 8 }, false },
-    { { 464, 816, 8, 8 }, false },
-    { { 496, 816, 8, 8 }, false },
-    { { 528, 816, 8, 8 }, false },
-    { { 560, 816, 8, 8 }, false },
+    // { { 48, 816, 8, 8 }, false },
+    // { { 80, 816, 8, 8 }, false },
+    // { { 112, 816, 8, 8 }, false },
+    // { { 144, 816, 8, 8 }, false },
+    // { { 176, 816, 8, 8 }, false },
+    // { { 208, 816, 8, 8 }, false },
+    // { { 240, 816, 8, 8 }, false },
+    // { { 272, 816, 8, 8 }, false },
+    // { { 304, 816, 8, 8 }, false },
+    // { { 336, 816, 8, 8 }, false },
+    // { { 368, 816, 8, 8 }, false },
+    // { { 400, 816, 8, 8 }, false },
+    // { { 432, 816, 8, 8 }, false },
+    // { { 464, 816, 8, 8 }, false },
+    // { { 496, 816, 8, 8 }, false },
+    // { { 528, 816, 8, 8 }, false },
+    // { { 560, 816, 8, 8 }, false },
     { { 592, 816, 8, 8 }, false },
 
 };
+
+int remainingPellets = NUM_PELLETS;
+bool gameOver = false;
 
 bool checkCollision(SDL_Rect rect)
 {
@@ -321,6 +327,13 @@ bool checkCollision(SDL_Rect rect)
             // Pellet has been eaten
             pellets[i].eaten = true;
             isPelletEaten = true;
+            remainingPellets--;
+
+            if (remainingPellets == 0)
+            {
+                printf("You win!\n");
+                gameOver = true;
+            }
         }
     }
     // No collision detected
@@ -329,11 +342,38 @@ bool checkCollision(SDL_Rect rect)
 
 void init()
 {
+      // Get the path of the current source file
+    char currentPath[FILENAME_MAX];
+    if (realpath(__FILE__, currentPath) == NULL)
+    {
+        fprintf(stderr, "Failed to get current file path.\n");
+        // Handle the error accordingly
+    }
+
+    // Get the directory path of the current source file
+    char* fontDirectory = dirname(currentPath);
+
+    // Set the working directory to the directory where the font file is located
+    if (chdir(fontDirectory) != 0)
+    {
+        fprintf(stderr, "Failed to set working directory to font directory.\n");
+        // Handle the error accordingly
+    }
+
     pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 700, 900, SDL_WINDOW_SHOWN);
     win_surf = SDL_GetWindowSurface(pWindow);
 
     plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
     count = 0;
+
+    // Initialize SDL_ttf
+    TTF_Init();
+    font = TTF_OpenFont("pacman.ttf", 32);
+        if (font == NULL)
+    {
+        fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
+        // Handle the error accordingly
+    }
 }
 
 void draw()
@@ -379,7 +419,7 @@ void draw()
     SDL_SetColorKey(plancheSprites, true, 0);
     SDL_BlitScaled(plancheSprites, &ghost_in2, win_surf, &ghost);
 
-SDL_Rect pacman_direction;
+    SDL_Rect pacman_direction;
     if (lastDirection == SDL_SCANCODE_LEFT)
     {
         pacman_direction = pacman_left;
@@ -419,12 +459,29 @@ SDL_Rect pacman_direction;
     }
 
     // Check collision with solid walls before updating Pacman's position
-    if (!checkCollision(nextPosition))
+    if (!checkCollision(nextPosition) && !gameOver)
     {
         pacman = nextPosition;
     }
 
     SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
+
+    // Render the "You win!" message if the game is won
+    if (gameOver)
+    {
+        SDL_Color textColor = { 255, 255, 255 };
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, "You win!", textColor);
+
+        SDL_Rect textRect;
+        textRect.x = (win_surf->w - textSurface->w) / 2;
+        textRect.y = (win_surf->h - textSurface->h) / 2;
+        textRect.w = textSurface->w;
+        textRect.h = textSurface->h;
+
+        SDL_BlitSurface(textSurface, NULL, win_surf, &textRect);
+
+        SDL_FreeSurface(textSurface);
+    }
 }
 
 int main(int argc, char** argv)
@@ -476,6 +533,8 @@ int main(int argc, char** argv)
         SDL_UpdateWindowSurface(pWindow);
     }
 
+    TTF_CloseFont(font);
+    TTF_Quit();
     SDL_Quit();
     return 0;
 }
