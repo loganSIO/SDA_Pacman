@@ -26,6 +26,7 @@ SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
 bool isPelletEaten = false;
+bool gameWon = false;
 
 int count;
 
@@ -305,9 +306,6 @@ Pellet pellets[NUM_PELLETS] = {
 
 };
 
-int remainingPellets = NUM_PELLETS;
-bool gameOver = false;
-
 bool checkCollision(SDL_Rect rect)
 {
     // Check if the given rectangle collides with any of the walls
@@ -328,21 +326,37 @@ bool checkCollision(SDL_Rect rect)
             // Pellet has been eaten
             pellets[i].eaten = true;
             isPelletEaten = true;
-            remainingPellets--;
-
-            if (remainingPellets == 0)
-            {
-                printf("You win!\n");
-                gameOver = true;
-            }
         }
     }
+
+    bool allPelletsEaten = true;
+    for (int i = 0; i < NUM_PELLETS; i++)
+    {
+        if (!pellets[i].eaten)
+        {
+            allPelletsEaten = false;
+            break;
+        }
+    }
+
+    // Set gameWon flag if all pellets are eaten
+    if (allPelletsEaten)
+    {
+        gameWon = true;
+    }
+
     // No collision detected
     return false;
 }
 
 void init()
 {
+    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 700, 900, SDL_WINDOW_SHOWN);
+    win_surf = SDL_GetWindowSurface(pWindow);
+
+    plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
+    count = 0;
+
       // Get the path of the current source file
     char currentPath[FILENAME_MAX];
     if (realpath(__FILE__, currentPath) == NULL)
@@ -360,12 +374,6 @@ void init()
         fprintf(stderr, "Failed to set working directory to font directory.\n");
         // Handle the error accordingly
     }
-
-    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 700, 900, SDL_WINDOW_SHOWN);
-    win_surf = SDL_GetWindowSurface(pWindow);
-
-    plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
-    count = 0;
 
     // Initialize SDL_ttf
     TTF_Init();
@@ -460,89 +468,228 @@ void draw()
     }
 
     // Check collision with solid walls before updating Pacman's position
-    if (!checkCollision(nextPosition) && !gameOver)
+    if (!checkCollision(nextPosition))
     {
         pacman = nextPosition;
     }
 
     SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
-
-    // Render the "You win!" message if the game is won
-    if (gameOver)
-    {
-        SDL_Color textColor = { 255, 255, 255 };
-        SDL_Surface* textSurface = TTF_RenderText_Solid(font, "You win!", textColor);
-
-        SDL_Rect textRect;
-        textRect.x = (win_surf->w - textSurface->w) / 2;
-        textRect.y = (win_surf->h - textSurface->h) / 2;
-        textRect.w = textSurface->w;
-        textRect.h = textSurface->h;
-
-        SDL_BlitSurface(textSurface, NULL, win_surf, &textRect);
-
-        SDL_FreeSurface(textSurface);
-    }
 }
 
-int main(int argc, char** argv)
+void drawMenu(SDL_Surface* surface, bool isWinMenu)
 {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        fprintf(stderr, "Echec de l'initialisation de la SDL %s", SDL_GetError());
-        return 1;
-    }
+    // Clear the surface
+    SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
 
-    init();
-
-    font = TTF_OpenFont("pacman.ttf", 32);
+    // Load the font
+    TTF_Font* font = TTF_OpenFont("pacman.ttf", 32);
     if (font == NULL)
     {
         fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
         // Handle the error accordingly
     }
 
+    // Create a surface for the menu options
+    SDL_Surface* textSurfaceRetry = TTF_RenderText_Solid(font, "Retry (R)", (SDL_Color){255, 255, 255});
+    SDL_Surface* textSurfaceQuit = TTF_RenderText_Solid(font, "Quit (Q)", (SDL_Color){255, 255, 255});
+    if (textSurfaceRetry == NULL || textSurfaceQuit == NULL)
+    {
+        fprintf(stderr, "Failed to render text surface: %s\n", TTF_GetError());
+        // Handle the error accordingly
+    }
+
+    // Calculate the position to display the menu options on the screen
+    int textX = (surface->w - textSurfaceRetry->w) / 2;
+    int textY = (surface->h - textSurfaceRetry->h) / 2;
+
+    // Blit the menu options onto the surface
+    SDL_BlitSurface(textSurfaceRetry, NULL, surface, &(SDL_Rect){textX, textY, 0, 0});
+    SDL_BlitSurface(textSurfaceQuit, NULL, surface, &(SDL_Rect){textX, textY + textSurfaceRetry->h + 10, 0, 0});
+
+    // If it's the win menu, render the win message on top
+    if (isWinMenu)
+    {
+        SDL_Surface* winMessage = TTF_RenderText_Solid(font, "You Win!", (SDL_Color){255, 255, 255});
+        if (winMessage == NULL)
+        {
+            fprintf(stderr, "Failed to render win message surface: %s\n", TTF_GetError());
+            // Handle the error accordingly
+        }
+
+        int messageX = (surface->w - winMessage->w) / 2;
+        int messageY = (surface->h - winMessage->h) / 4;
+        SDL_BlitSurface(winMessage, NULL, surface, &(SDL_Rect){messageX, messageY, 0, 0});
+
+        SDL_FreeSurface(winMessage);
+    }
+
+    // Free the text surfaces
+    SDL_FreeSurface(textSurfaceRetry);
+    SDL_FreeSurface(textSurfaceQuit);
+
+    // Close the font
+    TTF_CloseFont(font);
+}
+
+void handleInput(SDL_Event* event)
+{
+    switch (event->type)
+    {
+    case SDL_QUIT:
+        exit(0);
+        break;
+    case SDL_KEYDOWN:
+        switch (event->key.keysym.sym)
+        {
+        case SDLK_LEFT:
+            lastDirection = SDL_SCANCODE_LEFT;
+            break;
+        case SDLK_RIGHT:
+            lastDirection = SDL_SCANCODE_RIGHT;
+            break;
+        case SDLK_UP:
+            lastDirection = SDL_SCANCODE_UP;
+            break;
+        case SDLK_DOWN:
+            lastDirection = SDL_SCANCODE_DOWN;
+            break;
+        }
+        break;
+    }
+}
+
+void restartGame()
+{
+    // Reset the game state and variables
+    isPelletEaten = false;
+    gameWon = false;
+    lastDirection = -1; // Reset the last key pressed direction
+    pacman = (SDL_Rect){340 - (16 / 2), 650 - (16 / 2), 32, 32}; // Reset Pacman's position
+
+    // Reset the eaten state of all pellets
+    for (int i = 0; i < NUM_PELLETS; i++)
+    {
+        pellets[i].eaten = false;
+    }
+}
+
+void gameLoop()
+{
     bool quit = false;
+    bool restart = false;
+
     while (!quit)
     {
         SDL_Event event;
-        while (!quit && SDL_PollEvent(&event))
+
+        while (SDL_PollEvent(&event))
         {
-            switch (event.type)
+            if (event.type == SDL_QUIT)
             {
-            case SDL_QUIT:
                 quit = true;
-                break;
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.scancode)
+            }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
                 {
-                case SDL_SCANCODE_LEFT:
-                case SDL_SCANCODE_RIGHT:
-                case SDL_SCANCODE_UP:
-                case SDL_SCANCODE_DOWN:
-                    lastDirection = event.key.keysym.scancode;
-                    break;
-                default:
-                    break;
+                    quit = true;
                 }
-                break;
-            default:
-                break;
+                else if (event.key.keysym.scancode == SDL_SCANCODE_LEFT ||
+                         event.key.keysym.scancode == SDL_SCANCODE_RIGHT ||
+                         event.key.keysym.scancode == SDL_SCANCODE_UP ||
+                         event.key.keysym.scancode == SDL_SCANCODE_DOWN)
+                {
+                    lastDirection = event.key.keysym.scancode;
+                }
+                else if (event.key.keysym.scancode == SDL_SCANCODE_R)
+                {
+                    if (gameWon)
+                    {
+                        restartGame();
+                    }
+                    restart = true;
+                }
+                else if (event.key.keysym.scancode == SDL_SCANCODE_A)
+                {
+                    quit = true;
+                    printf("Quitting the game...\n");
+                }
             }
         }
 
+        if (restart)
+        {
+            restart = false;
+        }
+
         const Uint8* keys = SDL_GetKeyboardState(NULL);
+
         if (keys[SDL_SCANCODE_ESCAPE])
+        {
             quit = true;
+        }
 
         draw();
-
-        SDL_Delay(1);
         SDL_UpdateWindowSurface(pWindow);
+
+        if (gameWon)
+        {
+            // Draw the win menu
+            SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
+            drawMenu(win_surf, true);
+            SDL_UpdateWindowSurface(pWindow);
+
+            bool menuActive = true;
+            while (menuActive)
+            {
+                SDL_Event menuEvent;
+                while (SDL_PollEvent(&menuEvent))
+                {
+                    if (menuEvent.type == SDL_QUIT)
+                    {
+                        quit = true;
+                        menuActive = false;
+                    }
+                    else if (menuEvent.type == SDL_KEYDOWN)
+                    {
+                        if (menuEvent.key.keysym.scancode == SDL_SCANCODE_R)
+                        {
+                            restartGame();
+                            menuActive = false;
+                        }
+                        else if (menuEvent.key.keysym.scancode == SDL_SCANCODE_A)
+                        {
+                            quit = true;
+                            printf("Quitting the game...\n");
+                            menuActive = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        fprintf(stderr, "SDL initialization failed: %s", SDL_GetError());
+        return 1;
     }
 
-    TTF_CloseFont(font);
-    TTF_Quit();
+    if (TTF_Init() != 0)
+    {
+        fprintf(stderr, "TTF initialization failed: %s", TTF_GetError());
+        return 1;
+    }
+
+    init();
+
+    gameLoop();
+
+    SDL_DestroyWindow(pWindow);
     SDL_Quit();
+
     return 0;
 }
