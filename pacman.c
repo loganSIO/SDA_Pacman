@@ -26,6 +26,7 @@ SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
 bool isPelletEaten = false;
+
 int count;
 
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
@@ -493,6 +494,13 @@ int main(int argc, char** argv)
     }
 
     init();
+
+    font = TTF_OpenFont("pacman.ttf", 32);
+    if (font == NULL)
+    {
+        fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
+        // Handle the error accordingly
+    }
 
     bool quit = false;
     while (!quit)
