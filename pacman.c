@@ -31,6 +31,7 @@ bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
 
+int score = 0;
 int count;
 
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
@@ -371,6 +372,7 @@ bool checkCollision(SDL_Rect rect)
             // Pellet has been eaten
             pellets[i].eaten = true;
             isPelletEaten = true;
+            score += 10;  // Increase the score by 10
         }
     }
 
@@ -382,6 +384,7 @@ bool checkCollision(SDL_Rect rect)
             // Big pellet has been eaten
             bigPellets[i].eaten = true;
             isBigPelletEaten = true;
+            score += 50;  // Increase the score by 50
         }
     }
 
@@ -417,7 +420,7 @@ bool checkCollision(SDL_Rect rect)
 
 void init()
 {
-    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 700, 900, SDL_WINDOW_SHOWN);
+    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1100, 900, SDL_WINDOW_SHOWN);
     win_surf = SDL_GetWindowSurface(pWindow);
 
     plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
@@ -647,6 +650,7 @@ void restartGame()
 {
     // Reset the game state and variables
     isPelletEaten = false;
+    bool isBigPelletEaten = false;
     gameWon = false;
     lastDirection = -1; // Reset the last key pressed direction
     pacman = (SDL_Rect){340 - (16 / 2), 650 - (16 / 2), 32, 32}; // Reset Pacman's position
@@ -656,6 +660,12 @@ void restartGame()
     {
         pellets[i].eaten = false;
     }
+
+    for (int i = 0; i < NUM_BIG_PELLETS; i++)
+    {
+        bigPellets[i].eaten = false;
+    }
+
 }
 
 void gameLoop()
@@ -753,6 +763,7 @@ void gameLoop()
             }
         }
     }
+    printf("Score: %d\n", score);
 }
 
 int main(int argc, char* argv[])
