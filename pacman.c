@@ -418,185 +418,67 @@ BigPellet bigPellets[NUM_BIG_PELLETS] = {
    //{ { 621, 650, 16, 16 }, false },
 };
 
-void init()
-{
-    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 900, SDL_WINDOW_SHOWN);
-    win_surf = SDL_GetWindowSurface(pWindow);
-
-    plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
-    count = 0;
-
-      // Get the path of the current source file
-    char currentPath[FILENAME_MAX];
-    if (realpath(__FILE__, currentPath) == NULL)
-    {
-        fprintf(stderr, "Failed to get current file path.\n");
-        // Handle the error accordingly
-    }
-
-    // Get the directory path of the current source file
-    char* fontDirectory = dirname(currentPath);
-
-    // Set the working directory to the directory where the font file is located
-    if (chdir(fontDirectory) != 0)
-    {
-        fprintf(stderr, "Failed to set working directory to font directory.\n");
-        // Handle the error accordingly
-    }
-}
-
-// Afficher les titres
+// DIsplay titles
 void display_highscore_title(){
-    SDL_Rect highscorePositions[] = {
-        { 720, 30, 25, 25 },  // H
-        { 750, 30, 25, 25 },  // I
-        { 780, 30, 25, 25 },  // G
-        { 810, 30, 25, 25 },  // H
-        { 840, 30, 25, 25 },  // S
-        { 870, 30, 25, 25 },  // C
-        { 900, 30, 25, 25 },  // O
-        { 930, 30, 25, 25 },  // R
-        { 960, 30, 25, 25 }   // E
-    };
-
-    SDL_Rect letters[] = {
-        letterH,
-        letterI,
-        letterG,
-        letterH,
-        letterS,
-        letterC,
-        letterO,
-        letterR,
-        letterE
-    };
-
+    SDL_Rect highscoreLetters[9] = { letterH, letterI, letterG, letterH, letterS, letterC, letterO, letterR, letterE };
+    SDL_Rect posInit = { 720, 30, 25, 25 }; // Position initiale de la lettre "H"
+    int x = posInit.x;
     for (int i = 0; i < 9; i++) {
-        SDL_BlitScaled(plancheSprites, &letters[i], win_surf, &highscorePositions[i]);
+        SDL_Rect letterPos = { x, posInit.y, posInit.w, posInit.h };
+        SDL_BlitScaled(plancheSprites, &highscoreLetters[i], win_surf, &letterPos);
+        x += 30; // Augmenter x de 30 pour la position de la lettre suivante
     }
 }
 void display_score_title(){
-    SDL_Rect scorePositions[] = {
-        { 720, 200, 25, 25 },  // S
-        { 750, 200, 25, 25 },  // C
-        { 780, 200, 25, 25 },  // O
-        { 810, 200, 25, 25 },  // R
-        { 840, 200, 25, 25 },  // E
-    };
-    SDL_Rect lettersScore[] = {
-        letterS,
-        letterC,
-        letterO,
-        letterR,
-        letterE,
-    };
+    SDL_Rect lettersScore[5] = { letterS, letterC, letterO, letterR, letterE };
+    SDL_Rect posInit = { 720, 200, 25, 25 }; // Position initiale de la lettre "S"
+    int x = posInit.x;
     for (int i = 0; i < 5; i++) {
-        SDL_BlitScaled(plancheSprites, &lettersScore[i], win_surf, &scorePositions[i]);
+        SDL_Rect letterPos = { x, posInit.y, posInit.w, posInit.h };
+        SDL_BlitScaled(plancheSprites, &lettersScore[i], win_surf, &letterPos);
+        x += 30; // Augmenter x de 30 pour la position de la lettre suivante
     }
 }
 
-// Affiche le score actuel du joueur
-void display_game_score(){
+// Display scores
+void display_game_score() {
     int scoreToDisplay = score;
-    int digit = 0;
     int x = 820;
     int y = 250;
-    SDL_Rect numberToDisplay;
+    SDL_Rect number[10] = {number0, number1, number2, number3, number4, number5, number6, number7, number8, number9};
     while (scoreToDisplay > 0) {
-        digit = scoreToDisplay % 10;
-        switch (digit) {
-            case 0:
-                numberToDisplay = number0;
-                break;
-            case 1:
-                numberToDisplay = number1;
-                break;
-            case 2:
-                numberToDisplay = number2;
-                break;
-            case 3:
-                numberToDisplay = number3;
-                break;
-            case 4:
-                numberToDisplay = number4;
-                break;
-            case 5:
-                numberToDisplay = number5;
-                break;
-            case 6:
-                numberToDisplay = number6;
-                break;
-            case 7:
-                numberToDisplay = number7;
-                break;
-            case 8:
-                numberToDisplay = number8;
-                break;
-            case 9:
-                numberToDisplay = number9;
-                break;
-            default:
-                break;
-        }
-        SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &((SDL_Rect){x, y, 25, 25}));
+        int digit = scoreToDisplay % 10;
+        SDL_Rect numberToDisplay = number[digit];
+
+        SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &(SDL_Rect){x, y, 25, 25});
         scoreToDisplay /= 10;
         x -= 25;
     }
     if (score == 0) {
-        SDL_BlitScaled(plancheSprites, &number0, win_surf, &((SDL_Rect){x, y, 25, 25}));
+        SDL_BlitScaled(plancheSprites, &number0, win_surf, &(SDL_Rect){x, y, 25, 25});
     }
 }
-void display_game_highscore(){
+void display_game_highscore() {
     int highscoreToDisplay = highscore;
-    int digit = 0;
     int x = 820;
     int y = 80;
-    SDL_Rect numberToDisplay;
+    SDL_Rect number[10] = {number0, number1, number2, number3, number4, number5, number6, number7, number8, number9};
+
     while (highscoreToDisplay > 0) {
-        digit = highscoreToDisplay % 10;
-        switch (digit) {
-            case 0:
-                numberToDisplay = number0;
-                break;
-            case 1:
-                numberToDisplay = number1;
-                break;
-            case 2:
-                numberToDisplay = number2;
-                break;
-            case 3:
-                numberToDisplay = number3;
-                break;
-            case 4:
-                numberToDisplay = number4;
-                break;
-            case 5:
-                numberToDisplay = number5;
-                break;
-            case 6:
-                numberToDisplay = number6;
-                break;
-            case 7:
-                numberToDisplay = number7;
-                break;
-            case 8:
-                numberToDisplay = number8;
-                break;
-            case 9:
-                numberToDisplay = number9;
-                break;
-            default:
-                break;
-        }
-        SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &((SDL_Rect){x, y, 25, 25}));
+        int digit = highscoreToDisplay % 10;
+        SDL_Rect numberToDisplay = number[digit];
+
+        SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &(SDL_Rect){x, y, 25, 25});
         highscoreToDisplay /= 10;
         x -= 25;
     }
+
     if (highscore == 0) {
-        SDL_BlitScaled(plancheSprites, &number0, win_surf, &((SDL_Rect){x, y, 25, 25}));
+        SDL_BlitScaled(plancheSprites, &number0, win_surf, &(SDL_Rect){x, y, 25, 25});
     }
 }
 
+// Display lifes remaining
 void display_lifes(){
     int x = 720;
     int y = 400;
@@ -615,7 +497,6 @@ void draw_all_pellets(){
             SDL_FillRect(win_surf, &pellets[i].rect, SDL_MapRGB(win_surf->format, 252, 188, 176));
         }
     }
-
     // Draw the big pellet if it hasn't been eaten
     for (int i = 0; i < NUM_BIG_PELLETS; i++)
     {
@@ -714,6 +595,33 @@ bool checkCollision(SDL_Rect rect)
 
     // No collision detected
     return false;
+}
+
+void init()
+{
+    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 900, SDL_WINDOW_SHOWN);
+    win_surf = SDL_GetWindowSurface(pWindow);
+
+    plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
+    count = 0;
+
+      // Get the path of the current source file
+    char currentPath[FILENAME_MAX];
+    if (realpath(__FILE__, currentPath) == NULL)
+    {
+        fprintf(stderr, "Failed to get current file path.\n");
+        // Handle the error accordingly
+    }
+
+    // Get the directory path of the current source file
+    char* fontDirectory = dirname(currentPath);
+
+    // Set the working directory to the directory where the font file is located
+    if (chdir(fontDirectory) != 0)
+    {
+        fprintf(stderr, "Failed to set working directory to font directory.\n");
+        // Handle the error accordingly
+    }
 }
 
 void draw()
@@ -861,32 +769,32 @@ void drawEndMenu(SDL_Surface* surface, bool isWinMenu) {
 
     // Afficher le message "You Win!" ou "You Lost!"
     if (isWinMenu) {
-        SDL_Rect youWinPos = { surface->w / 2 - 120, surface->h / 2 - 250, 25, 25 };
-        SDL_Rect youWinLetters[9] = { letterY, letterO, letterU, espace, letterW, letterI, letterN, espace, exclamation};
+        SDL_Rect youWinPos = { surface->w / 2 - 120, surface->h / 2 - 200, 25, 25 };
+        SDL_Rect youWinLetters[9] = { letterY, letterO, letterU, espace, letterW, letterI, letterN, espace, exclamation };
         for (int i = 0; i < 9; i++) {
             SDL_BlitScaled(plancheSprites, &youWinLetters[i], surface, &youWinPos);
             youWinPos.x += 30;
         }
     } else {
-        SDL_Rect youLostPos = { surface->w / 2 - 160, surface->h / 2 - 250, 25, 25 };
-        SDL_Rect youLostLetters[10] = { letterY, letterO, letterU, espace, letterL, letterO, letterS, letterT, espace, exclamation};
+        SDL_Rect youLostPos = { surface->w / 2 - 120, surface->h / 2 - 200, 25, 25 };
+        SDL_Rect youLostLetters[10] = { letterY, letterO, letterU, espace, letterL, letterO, letterS, letterT, espace, exclamation };
         for (int i = 0; i < 10; i++) {
             SDL_BlitScaled(plancheSprites, &youLostLetters[i], surface, &youLostPos);
             youLostPos.x += 30;
         }
     }
 
-    // Afficher les choix "Rejouer - R" et "Quitter - Q"
-    SDL_Rect replayPos = { surface->w / 2 - 140, surface->h / 2 - 60, 25, 25 };
-    SDL_Rect replayLetters[10] = { letterR, letterE, letterJ, letterO, letterU, letterE, letterR, espace, tiret, letterR };
-    for (int i = 0; i < 10; i++) {
-        SDL_BlitScaled(plancheSprites, &replayLetters[i], surface, &replayPos);
-        replayPos.x += 30;
+    // Afficher les choix "Try again - T" et "Quit - Q"
+    SDL_Rect tryAgainPos = { surface->w / 2 - 170, surface->h / 2 - 50, 25, 25 };
+    SDL_Rect tryAgainLetters[12] = { letterT, letterR, letterY, espace, letterA, letterG, letterA, letterI, letterN, espace, tiret, letterT};
+    for (int i = 0; i < 12; i++) {
+        SDL_BlitScaled(plancheSprites, &tryAgainLetters[i], surface, &tryAgainPos);
+        tryAgainPos.x += 30;
     }
 
-    SDL_Rect quitPos = { surface->w / 2 - 140, surface->h / 2 - 10, 25, 25 };
-    SDL_Rect quitLetters[10] = { letterQ, letterU, letterI, letterT, letterT, letterE, letterR, espace, tiret, letterQ };
-    for (int i = 0; i < 10; i++) {
+    SDL_Rect quitPos = { surface->w / 2 - 100, surface->h / 2 - 0, 25, 25 };
+    SDL_Rect quitLetters[7] = { letterQ, letterU, letterI, letterT, espace, tiret, letterQ };
+    for (int i = 0; i < 7; i++) {
         SDL_BlitScaled(plancheSprites, &quitLetters[i], surface, &quitPos);
         quitPos.x += 30;
     }
@@ -972,7 +880,7 @@ void gameLoop()
                 {
                     lastDirection = event.key.keysym.scancode;
                 }
-                else if (event.key.keysym.scancode == SDL_SCANCODE_R)
+                else if (event.key.keysym.scancode == SDL_SCANCODE_T)
                 {
                     if (gameWon)
                     {
@@ -1023,13 +931,15 @@ void gameLoop()
                     }
                     else if (menuEvent.type == SDL_KEYDOWN)
                     {
-                        if (menuEvent.key.keysym.scancode == SDL_SCANCODE_R)
+                        if (menuEvent.key.keysym.scancode == SDL_SCANCODE_T)
                         {
+                            SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
                             restartGame();
                             menuActive = false;
                         }
                         else if (menuEvent.key.keysym.scancode == SDL_SCANCODE_A)
                         {
+                            SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
                             quit = true;
                             printf("Quitting the game...\n");
                             menuActive = false;
