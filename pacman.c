@@ -29,7 +29,7 @@ SDL_Rect ghost_pink_r = { 3, 141, 16, 16 };
 SDL_Rect ghost_pink_l = { 37, 141, 16, 16 };
 SDL_Rect ghost_pink_d = { 105, 141, 16, 16 };
 SDL_Rect ghost_pink_u = { 71, 141, 16, 16 };
-SDL_Rect ghost_pink = { 34, 34, 32, 32 };
+SDL_Rect ghost_pink = { 320, 400, 32, 32 };
 
 SDL_Rect ghost_orange_r = { 3, 177, 16, 16 };
 SDL_Rect ghost_orange_l = { 37, 177, 16, 16 };
@@ -103,6 +103,7 @@ int animationDelay = 200;
 int score = 0;
 int highscore = 0;
 int count;
+int count_pink;
 
 SDL_Rect pacman = { 333 - (16 / 2), 654 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
@@ -423,18 +424,24 @@ BigPellet bigPellets[NUM_BIG_PELLETS] = {
    { { 621, 650, 16, 16 }, false },
 };
 
-bool checkCollision(SDL_Rect rect)
+bool checkWallCollision(SDL_Rect rect)
 {
     // Check if the given rectangle collides with any of the walls
     for (int i = 0; i < NUM_WALLS; i++)
     {
         if (SDL_HasIntersection(&rect, &walls[i]) == SDL_TRUE)
         {
-            // Collision detected
+            // Collision detected with wall
             return true;
         }
     }
 
+    // No collision with walls detected
+    return false;
+}
+
+bool checkPelletCollision(SDL_Rect rect)
+{
     // Check collision with the pellet
     for (int i = 0; i < NUM_PELLETS; i++)
     {
@@ -447,7 +454,7 @@ bool checkCollision(SDL_Rect rect)
         }
     }
 
-// Check collision with the big pellet
+    // Check collision with the big pellet
     for (int i = 0; i < NUM_BIG_PELLETS; i++)
     {
         if (!bigPellets[i].eaten && SDL_HasIntersection(&rect, &bigPellets[i].rect) == SDL_TRUE)
@@ -485,8 +492,17 @@ bool checkCollision(SDL_Rect rect)
         gameWon = true;
     }
 
-    // No collision detected
+    // No collision with pellets detected
     return false;
+}
+
+bool checkCollision(SDL_Rect rect)
+{
+    bool wallCollision = checkWallCollision(rect);
+    bool pelletCollision = checkPelletCollision(rect);
+
+    // Collision detected if there is a wall or pellet collision
+    return wallCollision || pelletCollision;
 }
 
 void init()
@@ -696,19 +712,8 @@ void draw_all_pellets(){
     }
 }
 
-
-void draw()
+void moveGhosts()
 {
-    SDL_SetColorKey(plancheSprites, false, 0);
-    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
-
-    display_highscore_title();
-    display_score_title();
-    display_game_score();
-    display_game_highscore();
-
-    draw_all_pellets();
-
     SDL_Rect* ghost_in = NULL;
     switch (count / 128)
     {
@@ -742,14 +747,71 @@ void draw()
     SDL_Rect cyanGhost = { 295, 400, 32, 32 }; // Initial sprite direction
     SDL_BlitScaled(plancheSprites, &ghost_cyan_u, win_surf, &cyanGhost);
 
-    // Spawn point pink ghost
-    SDL_Rect pinkGhost = { 325, 400, 32, 32 }; // Initial sprite direction
-    SDL_BlitScaled(plancheSprites, &ghost_pink_d, win_surf, &pinkGhost);
-
     // Spawn point orange ghost
     SDL_Rect orangeGhost = { 355, 400, 32, 32 }; // Initial sprite direction
     SDL_BlitScaled(plancheSprites, &ghost_orange_u, win_surf, &orangeGhost);
 
+    SDL_Rect* pinkGhost = NULL; // Initial sprite direction
+    switch (count_pink / 128)
+    {
+    case 0:
+        pinkGhost = &ghost_pink_u;
+        ghost_pink.y--;
+        if (checkWallCollision(ghost_pink))
+        {
+            ghost_pink.y++;    // Revert the movement
+            count_pink += 128; // Move to the next case in the switch
+        }
+        break;
+    case 1:
+        pinkGhost = &ghost_pink_r;
+        ghost_pink.x++;
+        if (checkWallCollision(ghost_pink))
+        {
+            ghost_pink.x--;    // Revert the movement
+            count_pink += 128; // Move to the next case in the switch
+        }
+        break;
+    case 2:
+        pinkGhost = &ghost_pink_d;
+        ghost_pink.y++;
+        if (checkWallCollision(ghost_pink))
+        {
+            ghost_pink.y--;    // Revert the movement
+            count_pink += 128; // Move to the next case in the switch
+        }
+        break;
+    case 3:
+        pinkGhost = &ghost_pink_l;
+        ghost_pink.x--;
+        if (checkWallCollision(ghost_pink))
+        {
+            ghost_pink.x++; // Revert the movement
+            count_pink = 0; // Move back to the first case in the switch
+        }
+        break;
+    }
+
+    SDL_Rect ghost_in_pink = *pinkGhost;
+    if ((count_pink / 4) % 2)
+        ghost_in_pink.x += 17;
+
+    SDL_BlitScaled(plancheSprites, &ghost_in_pink, win_surf, &ghost_pink);
+}
+
+
+void draw()
+{
+    SDL_SetColorKey(plancheSprites, false, 0);
+    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
+
+    display_highscore_title();
+    display_score_title();
+    display_game_score();
+    display_game_highscore();
+
+    draw_all_pellets();
+    moveGhosts();
 
     Uint32 currentTime = SDL_GetTicks();
     if (currentTime - lastAnimationChangeTime >= animationDelay)
