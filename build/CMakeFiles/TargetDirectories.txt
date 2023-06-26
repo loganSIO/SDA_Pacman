@@ -1,3 +1,3 @@
-/media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan/build/CMakeFiles/rebuild_cache.dir
-/media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan/build/CMakeFiles/edit_cache.dir
-/media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan/build/CMakeFiles/Pacman.dir
+/home/alexandre/SDA_Pacman/build/CMakeFiles/Pacman.dir
+/home/alexandre/SDA_Pacman/build/CMakeFiles/edit_cache.dir
+/home/alexandre/SDA_Pacman/build/CMakeFiles/rebuild_cache.dir

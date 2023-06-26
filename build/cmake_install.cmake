@@ -1,4 +1,4 @@
-# Install script for directory: /media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan
+# Install script for directory: /home/alexandre/SDA_Pacman
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/media/logan/Nouveau nom/CNAM/Sem2/SDA/PacMan/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/alexandre/SDA_Pacman/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

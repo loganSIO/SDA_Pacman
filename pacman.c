@@ -1,5 +1,5 @@
-#include <SDL.h>
-#include <SDL_ttf.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <unistd.h>
 #include <libgen.h> // For dirname function
 #include <stdio.h>
@@ -26,6 +26,47 @@ SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
 SDL_Rect bigPellet = { 9, 79, 8, 8 };
+
+SDL_Rect letterA = { 12, 61, 7, 7 };
+SDL_Rect letterB = { 20, 61, 7, 7 };
+SDL_Rect letterC = { 28, 61, 7, 7 };
+SDL_Rect letterD = { 36, 61, 7, 7 };
+SDL_Rect letterE = { 44, 61, 7, 7 };
+SDL_Rect letterF = { 52, 61, 7, 7 };
+SDL_Rect letterG = { 60, 61, 7, 7 };
+SDL_Rect letterH = { 68, 61, 7, 7 };
+SDL_Rect letterI = { 76, 61, 7, 7 };
+SDL_Rect letterJ = { 84, 61, 7, 7 };
+SDL_Rect letterK = { 92, 61, 7, 7 };
+SDL_Rect letterL = { 100, 61, 7, 7 };
+SDL_Rect letterM = { 108, 61, 7, 7 };
+SDL_Rect letterN = { 116, 61, 7, 7 };
+SDL_Rect letterO = { 124, 61, 7, 7 };
+
+SDL_Rect letterP = { 4, 69, 7, 7 };
+SDL_Rect letterQ = { 12, 69, 7, 7 };
+SDL_Rect letterR = { 20, 69, 7, 7 };
+SDL_Rect letterS = { 28, 69, 7, 7 };
+SDL_Rect letterT = { 36, 69, 7, 7 };
+SDL_Rect letterU = { 44, 69, 7, 7 };
+SDL_Rect letterV = { 52, 69, 7, 7 };
+SDL_Rect letterW = { 60, 69, 7, 7 };
+SDL_Rect letterX = { 68, 69, 7, 7 };
+SDL_Rect letterY = { 76, 69, 7, 7 };
+SDL_Rect letterZ = { 84, 69, 7, 7 };
+
+SDL_Rect number0 = { 4, 26, 7, 7 };
+SDL_Rect number1 = { 12, 26, 7, 7 };
+SDL_Rect number2 = { 20, 26, 7, 7 };
+SDL_Rect number3 = { 28, 26, 7, 7 };
+SDL_Rect number4 = { 36, 26, 7, 7 };
+SDL_Rect number5 = { 44, 26, 7, 7 };
+SDL_Rect number6 = { 52, 26, 7, 7 };
+SDL_Rect number7 = { 60, 26, 7, 7 };
+SDL_Rect number8 = { 68, 26, 7, 7 };
+SDL_Rect number9 = { 76, 26, 7, 7 };
+
+SDL_Rect tiret = { 84, 26, 7, 7 };
 
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
@@ -417,7 +458,7 @@ bool checkCollision(SDL_Rect rect)
 
 void init()
 {
-    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 700, 900, SDL_WINDOW_SHOWN);
+    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1100, 900, SDL_WINDOW_SHOWN);
     win_surf = SDL_GetWindowSurface(pWindow);
 
     plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
@@ -451,10 +492,78 @@ void init()
     }
 }
 
+
 void draw()
 {
     SDL_SetColorKey(plancheSprites, false, 0);
     SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
+
+    // AFFICHAGE "HIGHSCORE"
+    SDL_Rect highscorePositions[] = {
+        { 720, 30, 25, 25 },  // H
+        { 750, 30, 25, 25 },  // I
+        { 780, 30, 25, 25 },  // G
+        { 810, 30, 25, 25 },  // H
+        { 840, 30, 25, 25 },  // S
+        { 870, 30, 25, 25 },  // C
+        { 900, 30, 25, 25 },  // O
+        { 930, 30, 25, 25 },  // R
+        { 960, 30, 25, 25 }   // E
+    };
+    SDL_Rect letters[] = {
+        letterH,
+        letterI,
+        letterG,
+        letterH,
+        letterS,
+        letterC,
+        letterO,
+        letterR,
+        letterE
+    };
+    for (int i = 0; i < 9; i++) {
+        SDL_BlitScaled(plancheSprites, &letters[i], win_surf, &highscorePositions[i]);
+    }
+
+    // AFFICHAGE VARIABLE SCORE
+    SDL_Rect scorePositions[] = {
+        { 720, 200, 25, 25 },  // unite
+        { 750, 200, 25, 25 },  // dizaine
+        { 780, 200, 25, 25 },  // centaine
+        { 810, 200, 25, 25 },  // millier
+        { 840, 200, 25, 25 },  // dizaine de millier
+    };
+
+    //
+
+//
+
+//
+
+//
+
+//
+
+//
+    // AFFICHAGE "SCORE"
+    SDL_Rect scorePositions[] = {
+        { 720, 200, 25, 25 },  // S
+        { 750, 200, 25, 25 },  // C
+        { 780, 200, 25, 25 },  // O
+        { 810, 200, 25, 25 },  // R
+        { 840, 200, 25, 25 },  // E
+    };
+    SDL_Rect lettersScore[] = {
+        letterS,
+        letterC,
+        letterO,
+        letterR,
+        letterE
+    };
+    for (int i = 0; i < 5; i++) {
+        SDL_BlitScaled(plancheSprites, &lettersScore[i], win_surf, &scorePositions[i]);
+    }
+
 
     // Draw the pellet if it hasn't been eaten
     for (int i = 0; i < NUM_PELLETS; i++)
