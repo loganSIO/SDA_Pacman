@@ -33,58 +33,86 @@ int count;
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
-#define NUM_WALLS 43
+#define NUM_WALLS 47
 #define NUM_PELLETS 1
 
 SDL_Rect walls[NUM_WALLS] = {
-    // { x, y, w, h }
-    { 0, 0, 1680, 34 }, // Top wall
-    { 0, 0, 34, 7200 }, // Left side wall
-    { 0, 838, 1680, 34 }, // Bottom wall
-    { 644, 0, 34, 1680 }, // Bottom wall
-    // Left side of the wall
-    { 22, 292, 142, 126 }, // first rectangle
-    { 22, 455, 142, 128 }, // second rectangle
-    { 22, 678, 78, 62 }, // third rectangle
-    // Block & line left side
-    { 66, 70, 92, 92 }, // first block
-    { 66, 202, 92, 50 }, // second rectangle block
-    { 198, 70, 92, 92 }, // second block
-    { 198, 202, 26, 218 }, // first y line
-    { 240, 296, 46, 30 }, // first x line
-    { 198, 462, 26, 112 }, // second y line
-    { 198, 620, 92, 22 }, // second x line
-    { 74, 620, 88, 24 }, // first inversed L x axis
-    { 140, 640, 22, 92 }, // first inversed L y axis
-    { 198, 680, 26, 120 }, // second y line
-    { 74, 780, 212, 24 }, // second y line
-    // Mirrored lines on the right side
-    { 680 - 22 - 138, 292, 138, 126 }, // First rectangle
-    { 680 - 22 - 138, 455, 138, 128 }, // Second rectangle
-    { 680 - 22 - 74, 678, 74, 62 },     // Third rectangle
-    { 680 - 66 - 78, 70, 70, 92 },      // First block
-    { 680 - 66 - 78, 202, 70, 50 },     // Second rectangle block
-    { 680 - 198 - 92, 70, 92, 92 },     // Second block
-    { 680 - 198 - 26, 202, 26, 218 },   // First y line
-    { 680 - 240 - 46, 296, 46, 30 },    // First x line
-    { 680 - 198 - 26, 462, 26, 112 },   // Second y line
-    { 680 - 198 - 92, 620, 92, 22 },    // First x line
-    { 680 - 74 - 88, 620, 88, 24 },     // First inversed L x axis
-    { 680 - 140 - 22, 640, 22, 92 },    // First inversed L y axis
-    { 680 - 198 - 26, 680, 26, 120 },   // Second y line
-    { 680 - 74 - 212, 780, 212, 24 },    // Second y line
-    // Middle of the map
-    { 333, 30, 22, 130 }, // first middle line
-    { 270, 202, 140, 62 }, // first rectangle line
-    { 333, 214, 22, 112 }, // first middle line
-    { 270, 678, 140, 62 }, // last rectangle line
-    { 333, 690, 22, 112 }, // last middle line
-    { 270, 522, 140, 62 }, // third rectangle line
-    { 333, 530, 22, 112 }, // third middle line
+   // Sides of the map
+   { 0, 0, 1680, 31 },         // Top wall
+   { 0, 0, 31, 414},           // Upper left side wall
+   { 0, 458, 31, 450},         // Lower left side wall
+   { 644, 0, 100, 415},        // Upper right side
+   { 644, 458, 100, 450},      // Lower right side wall
+   { 0, 864 - 23, 1680, 100 }, // bottom wall
 
-    { 270, 368, 22, 112 }, // middle rectangle left
-    { 388, 368, 22, 112 }, // middle rectangle right
-    { 270, 458, 112, 22 }, // middle rectangle bottom
+   // Tunnel walls
+   { 0, 298, 158, 116 },   // Top of the left tunnel
+   { 0, 458, 158, 116 },   // Bottom of the left tunnel
+   { 522, 298, 158, 116 }, // Top of the right tunnel
+   { 522, 458, 158, 116 }, // Bottom of the right tunnel
+
+
+   // Walls attached to sides
+   { 0, 682, 93, 52 },    // Left
+   { 588, 682, 93, 52},   // Right
+
+
+   //Top left corner blocks
+   { 74, 74, 84, 84 },     // First block top left
+   { 74, 202, 84, 52 },    // Block under top left
+   { 202, 74, 84, 84 },    // Bloc right to top left
+
+
+   //Top right corner blocks
+   { 522, 74, 84, 84 },    // First block top right
+   { 522, 202, 84, 52 },   // Block under top right
+   { 394, 74, 84, 84 },    // Bloc left to top right
+
+
+   // Vertical left lines from top to bottom
+   { 202, 202, 20, 210},
+   { 202, 460, 20, 112 },
+   { 138, 638, 20, 94 },
+   { 202, 684, 20, 112},
+
+
+   // Vertical right lines from top to bottom
+   { 458, 202, 20, 210 },
+   { 458, 460, 20, 112 },  // left one
+   { 522, 638, 20, 94 },   // right one
+   { 458, 684, 20, 112 },
+
+
+   // Horizontal left lines
+   { 222, 298, 61, 20},  // Line over mid
+   { 202, 618, 84, 20 }, // Line under mid
+   { 74, 618, 84, 20 },  // Line left
+   { 74, 778, 212, 20 }, // Line bottom
+
+   // Horizontal right lines from top to bottom
+   { 397, 298, 61, 20 },
+   { 522, 618, 84, 20 }, // left one
+   { 394, 618, 84, 20 }, // right one
+   { 394, 778, 212, 20 },
+
+
+   // Middle of the map from top to bottom
+   { 330, 30, 20, 128 },   // first line
+   { 266, 202, 148, 52 },  // first rectangle
+   { 330, 214, 20, 102 },  // first rectangle line
+   { 266, 522, 148, 52 },  // second rectangle
+   { 330, 534, 20, 102 },  // second rectangle line
+   { 266, 682, 148, 52 },  // third rectangle
+   { 330, 694, 22, 102 },  // third rectangle line
+
+
+   // Ghost house walls
+   { 266, 362, 42, 20},    // Wall left to door
+   { 372, 362, 42, 20},    // Wall right to door
+   { 266, 362, 20, 112 },  // Left wall
+   { 394, 362, 20, 112 },  // Right wall
+   { 266, 458, 148, 20 },  // Bottom wall};
+
 };
 
 typedef struct {
@@ -466,7 +494,6 @@ void draw()
         nextPosition.y++;
         break;
     }
-
     // Check collision with solid walls before updating Pacman's position
     if (!checkCollision(nextPosition))
     {
@@ -474,6 +501,17 @@ void draw()
     }
 
     SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
+
+    // Check if pacman enter tunnel, teleport him to the other side
+    if (pacman.x < 10)
+    {
+        pacman.x = 645;
+    }
+    else if (pacman.x > 645)
+    {
+        pacman.x = 10;
+    }
+
 }
 
 void drawMenu(SDL_Surface* surface, bool isWinMenu)
