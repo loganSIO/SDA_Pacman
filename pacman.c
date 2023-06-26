@@ -24,6 +24,11 @@ SDL_Rect pacman_right = { 20, 90, 16, 16 };
 SDL_Rect pacman_left = { 46, 90, 16, 16 };
 SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
+SDL_Rect pacman_wide_right = { 36, 88, 12, 16 };
+SDL_Rect pacman_wide_left = { 63, 88, 12, 16 };
+SDL_Rect pacman_wide_up = { 93, 90, 16, 16 };
+SDL_Rect pacman_wide_down = { 126, 90, 16, 16 };
+
 
 SDL_Rect bigPellet = { 9, 79, 8, 8 };
 
@@ -71,16 +76,20 @@ SDL_Rect tiret = { 84, 53, 7, 7 };
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
+bool isWideOpen = false;
+
+Uint32 lastAnimationChangeTime = 0;
+int animationDelay = 200;
 
 int score = 0;
 int highscore = 0;
 int count;
 
-SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
+SDL_Rect pacman = { 333 - (16 / 2), 654 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
 #define NUM_WALLS 47
-#define NUM_PELLETS 1
+#define NUM_PELLETS 192
 #define NUM_BIG_PELLETS 1
 
 SDL_Rect walls[NUM_WALLS] = {
@@ -168,215 +177,215 @@ typedef struct {
 } Pellet;
 
 Pellet pellets[NUM_PELLETS] = {
-    // { { 176, 48, 8, 8 }, false },
-    // { { 176, 80, 8, 8 }, false },
-    // { { 176, 112, 8, 8 }, false },
-    // { { 176, 144, 8, 8 }, false },
-    // { { 176, 176, 8, 8 }, false },
-    // { { 176, 208, 8, 8 }, false },
-    // { { 176, 240, 8, 8 }, false },
-    // { { 176, 272, 8, 8 }, false },
-    // { { 176, 304, 8, 8 }, false },
-    // { { 176, 336, 8, 8 }, false },
-    // { { 176, 368, 8, 8 }, false },
-    // { { 176, 400, 8, 8 }, false },
-    // { { 176, 432, 8, 8 }, false },
-    // { { 176, 464, 8, 8 }, false },
-    // { { 176, 496, 8, 8 }, false },
-    // { { 176, 528, 8, 8 }, false },
-    // { { 176, 560, 8, 8 }, false },
-    // { { 176, 592, 8, 8 }, false },
-    // { { 176, 624, 8, 8 }, false },
-    // { { 176, 656, 8, 8 }, false },
-    // { { 176, 688, 8, 8 }, false },
-    // { { 176, 720, 8, 8 }, false },
-    // { { 176, 752, 8, 8 }, false },
+    { { 176, 48, 8, 8 }, false },
+    { { 176, 80, 8, 8 }, false },
+    { { 176, 112, 8, 8 }, false },
+    { { 176, 144, 8, 8 }, false },
+    { { 176, 176, 8, 8 }, false },
+    { { 176, 208, 8, 8 }, false },
+    { { 176, 240, 8, 8 }, false },
+    { { 176, 272, 8, 8 }, false },
+    { { 176, 304, 8, 8 }, false },
+    { { 176, 336, 8, 8 }, false },
+    { { 176, 368, 8, 8 }, false },
+    { { 176, 400, 8, 8 }, false },
+    { { 176, 432, 8, 8 }, false },
+    { { 176, 464, 8, 8 }, false },
+    { { 176, 496, 8, 8 }, false },
+    { { 176, 528, 8, 8 }, false },
+    { { 176, 560, 8, 8 }, false },
+    { { 176, 592, 8, 8 }, false },
+    { { 176, 624, 8, 8 }, false },
+    { { 176, 656, 8, 8 }, false },
+    { { 176, 688, 8, 8 }, false },
+    { { 176, 720, 8, 8 }, false },
+    { { 176, 752, 8, 8 }, false },
 
-    // { { 48, 176, 8, 8 }, false },
-    // { { 80, 176, 8, 8 }, false },
-    // { { 112, 176, 8, 8 }, false },
-    // { { 144, 176, 8, 8 }, false },
-    // { { 176, 176, 8, 8 }, false },
-    // { { 208, 176, 8, 8 }, false },
-    // { { 240, 176, 8, 8 }, false },
-    // { { 272, 176, 8, 8 }, false },
-    // { { 304, 176, 8, 8 }, false },
-    // { { 336, 176, 8, 8 }, false },
-    // { { 368, 176, 8, 8 }, false },
-    // { { 400, 176, 8, 8 }, false },
-    // { { 432, 176, 8, 8 }, false },
-    // { { 464, 176, 8, 8 }, false },
-    // { { 496, 176, 8, 8 }, false },
-    // { { 528, 176, 8, 8 }, false },
-    // { { 560, 176, 8, 8 }, false },
-    // { { 592, 176, 8, 8 }, false },
-    // { { 624, 176, 8, 8 }, false },
+    { { 48, 176, 8, 8 }, false },
+    { { 80, 176, 8, 8 }, false },
+    { { 112, 176, 8, 8 }, false },
+    { { 144, 176, 8, 8 }, false },
+    { { 176, 176, 8, 8 }, false },
+    { { 208, 176, 8, 8 }, false },
+    { { 240, 176, 8, 8 }, false },
+    { { 272, 176, 8, 8 }, false },
+    { { 304, 176, 8, 8 }, false },
+    { { 336, 176, 8, 8 }, false },
+    { { 368, 176, 8, 8 }, false },
+    { { 400, 176, 8, 8 }, false },
+    { { 432, 176, 8, 8 }, false },
+    { { 464, 176, 8, 8 }, false },
+    { { 496, 176, 8, 8 }, false },
+    { { 528, 176, 8, 8 }, false },
+    { { 560, 176, 8, 8 }, false },
+    { { 592, 176, 8, 8 }, false },
+    { { 624, 176, 8, 8 }, false },
 
-    // { { 48, 48, 8, 8 }, false },
-    // { { 48, 80, 8, 8 }, false },
-    // { { 48, 144, 8, 8 }, false },
-    // { { 48, 176, 8, 8 }, false },
-    // { { 48, 208, 8, 8 }, false },
-    // { { 48, 240, 8, 8 }, false },
-    // { { 48, 272, 8, 8 }, false },
+    { { 48, 48, 8, 8 }, false },
+    { { 48, 80, 8, 8 }, false },
+    { { 48, 144, 8, 8 }, false },
+    { { 48, 176, 8, 8 }, false },
+    { { 48, 208, 8, 8 }, false },
+    { { 48, 240, 8, 8 }, false },
+    { { 48, 272, 8, 8 }, false },
 
-    // { { 80, 48, 8, 8 }, false },
-    // { { 112, 48, 8, 8 }, false },
-    // { { 144, 48, 8, 8 }, false },
-    // { { 208, 48, 8, 8 }, false },
-    // { { 240, 48, 8, 8 }, false },
-    // { { 272, 48, 8, 8 }, false },
-    // { { 304, 48, 8, 8 }, false },
+    { { 80, 48, 8, 8 }, false },
+    { { 112, 48, 8, 8 }, false },
+    { { 144, 48, 8, 8 }, false },
+    { { 208, 48, 8, 8 }, false },
+    { { 240, 48, 8, 8 }, false },
+    { { 272, 48, 8, 8 }, false },
+    { { 304, 48, 8, 8 }, false },
 
-    // { { 304, 80, 8, 8 }, false },
-    // { { 304, 112, 8, 8 }, false },
-    // { { 304, 144, 8, 8 }, false },
+    { { 304, 80, 8, 8 }, false },
+    { { 304, 112, 8, 8 }, false },
+    { { 304, 144, 8, 8 }, false },
 
-    // { { 368, 48, 8, 8 }, false },
-    // { { 400, 48, 8, 8 }, false },
-    // { { 432, 48, 8, 8 }, false },
-    // { { 464, 48, 8, 8 }, false },
-    // { { 496, 48, 8, 8 }, false },
-    // { { 528, 48, 8, 8 }, false },
-    // { { 560, 48, 8, 8 }, false },
-    // { { 592, 48, 8, 8 }, false },
-    // { { 624, 48, 8, 8 }, false },
+    { { 368, 48, 8, 8 }, false },
+    { { 400, 48, 8, 8 }, false },
+    { { 432, 48, 8, 8 }, false },
+    { { 464, 48, 8, 8 }, false },
+    { { 496, 48, 8, 8 }, false },
+    { { 528, 48, 8, 8 }, false },
+    { { 560, 48, 8, 8 }, false },
+    { { 592, 48, 8, 8 }, false },
+    { { 624, 48, 8, 8 }, false },
 
-    // { { 368, 80, 8, 8 }, false },
-    // { { 368, 112, 8, 8 }, false },
-    // { { 368, 144, 8, 8 }, false },
+    { { 368, 80, 8, 8 }, false },
+    { { 368, 112, 8, 8 }, false },
+    { { 368, 144, 8, 8 }, false },
 
-    // { { 496, 80, 8, 8 }, false },
-    // { { 496, 112, 8, 8 }, false },
-    // { { 496, 144, 8, 8 }, false },
-    // { { 496, 176, 8, 8 }, false },
-    // { { 496, 208, 8, 8 }, false },
-    // { { 496, 240, 8, 8 }, false },
-    // { { 496, 272, 8, 8 }, false },
-    // { { 496, 304, 8, 8 }, false },
-    // { { 496, 336, 8, 8 }, false },
-    // { { 496, 368, 8, 8 }, false },
-    // { { 496, 400, 8, 8 }, false },
-    // { { 496, 432, 8, 8 }, false },
-    // { { 496, 464, 8, 8 }, false },
-    // { { 496, 496, 8, 8 }, false },
-    // { { 496, 528, 8, 8 }, false },
-    // { { 496, 560, 8, 8 }, false },
-    // { { 496, 592, 8, 8 }, false },
-    // { { 496, 624, 8, 8 }, false },
-    // { { 496, 656, 8, 8 }, false },
-    // { { 496, 688, 8, 8 }, false },
-    // { { 496, 720, 8, 8 }, false },
-    // { { 496, 752, 8, 8 }, false },
+    { { 496, 80, 8, 8 }, false },
+    { { 496, 112, 8, 8 }, false },
+    { { 496, 144, 8, 8 }, false },
+    { { 496, 176, 8, 8 }, false },
+    { { 496, 208, 8, 8 }, false },
+    { { 496, 240, 8, 8 }, false },
+    { { 496, 272, 8, 8 }, false },
+    { { 496, 304, 8, 8 }, false },
+    { { 496, 336, 8, 8 }, false },
+    { { 496, 368, 8, 8 }, false },
+    { { 496, 400, 8, 8 }, false },
+    { { 496, 432, 8, 8 }, false },
+    { { 496, 464, 8, 8 }, false },
+    { { 496, 496, 8, 8 }, false },
+    { { 496, 528, 8, 8 }, false },
+    { { 496, 560, 8, 8 }, false },
+    { { 496, 592, 8, 8 }, false },
+    { { 496, 624, 8, 8 }, false },
+    { { 496, 656, 8, 8 }, false },
+    { { 496, 688, 8, 8 }, false },
+    { { 496, 720, 8, 8 }, false },
+    { { 496, 752, 8, 8 }, false },
 
-    // { { 80, 272, 8, 8 }, false },
-    // { { 112, 272, 8, 8 }, false },
-    // { { 144, 272, 8, 8 }, false },
-    // { { 240, 272, 8, 8 }, false },
-    // { { 272, 272, 8, 8 }, false },
-    // { { 304, 272, 8, 8 }, false },
-    // { { 368, 272, 8, 8 }, false },
-    // { { 400, 272, 8, 8 }, false },
-    // { { 432, 272, 8, 8 }, false },
-    // { { 528, 272, 8, 8 }, false },
-    // { { 560, 272, 8, 8 }, false },
-    // { { 592, 272, 8, 8 }, false },
-    // { { 624, 272, 8, 8 }, false },
-    // // Last Column
-    // { { 624, 80, 8, 8 }, false },
-    // { { 624, 144, 8, 8 }, false },
-    // { { 624, 176, 8, 8 }, false },
-    // { { 624, 208, 8, 8 }, false },
-    // { { 624, 240, 8, 8 }, false },
-    // { { 624, 592, 8, 8 }, false },
-    // { { 624, 624, 8, 8 }, false },
-    // { { 624, 752, 8, 8 }, false },
-    // { { 624, 784, 8, 8 }, false },
-    // { { 624, 816, 8, 8 }, false },
+    { { 80, 272, 8, 8 }, false },
+    { { 112, 272, 8, 8 }, false },
+    { { 144, 272, 8, 8 }, false },
+    { { 240, 272, 8, 8 }, false },
+    { { 272, 272, 8, 8 }, false },
+    { { 304, 272, 8, 8 }, false },
+    { { 368, 272, 8, 8 }, false },
+    { { 400, 272, 8, 8 }, false },
+    { { 432, 272, 8, 8 }, false },
+    { { 528, 272, 8, 8 }, false },
+    { { 560, 272, 8, 8 }, false },
+    { { 592, 272, 8, 8 }, false },
+    { { 624, 272, 8, 8 }, false },
+    // Last Column
+    { { 624, 80, 8, 8 }, false },
+    { { 624, 144, 8, 8 }, false },
+    { { 624, 176, 8, 8 }, false },
+    { { 624, 208, 8, 8 }, false },
+    { { 624, 240, 8, 8 }, false },
+    { { 624, 592, 8, 8 }, false },
+    { { 624, 624, 8, 8 }, false },
+    { { 624, 752, 8, 8 }, false },
+    { { 624, 784, 8, 8 }, false },
+    { { 624, 816, 8, 8 }, false },
 
-    // { { 240, 208, 8, 8 }, false },
-    // { { 240, 240, 8, 8 }, false },
-    // { { 432, 208, 8, 8 }, false },
-    // { { 432, 240, 8, 8 }, false },
+    { { 240, 208, 8, 8 }, false },
+    { { 240, 240, 8, 8 }, false },
+    { { 432, 208, 8, 8 }, false },
+    { { 432, 240, 8, 8 }, false },
 
-    // { { 528, 592, 8, 8 }, false },
-    // { { 560, 592, 8, 8 }, false },
-    // { { 592, 592, 8, 8 }, false },
-    // { { 464, 592, 8, 8 }, false },
-    // { { 432, 592, 8, 8 }, false },
-    // { { 400, 592, 8, 8 }, false },
-    // { { 368, 592, 8, 8 }, false },
-    // { { 304, 592, 8, 8 }, false },
-    // { { 272, 592, 8, 8 }, false },
-    // { { 240, 592, 8, 8 }, false },
-    // { { 208, 592, 8, 8 }, false },
-    // { { 144, 592, 8, 8 }, false },
-    // { { 112, 592, 8, 8 }, false },
-    // { { 80, 592, 8, 8 }, false },
-    // { { 48, 592, 8, 8 }, false },
+    { { 528, 592, 8, 8 }, false },
+    { { 560, 592, 8, 8 }, false },
+    { { 592, 592, 8, 8 }, false },
+    { { 464, 592, 8, 8 }, false },
+    { { 432, 592, 8, 8 }, false },
+    { { 400, 592, 8, 8 }, false },
+    { { 368, 592, 8, 8 }, false },
+    { { 304, 592, 8, 8 }, false },
+    { { 272, 592, 8, 8 }, false },
+    { { 240, 592, 8, 8 }, false },
+    { { 208, 592, 8, 8 }, false },
+    { { 144, 592, 8, 8 }, false },
+    { { 112, 592, 8, 8 }, false },
+    { { 80, 592, 8, 8 }, false },
+    { { 48, 592, 8, 8 }, false },
 
-    // { { 48, 624, 8, 8 }, false },
-    // { { 304, 624, 8, 8 }, false },
-    // { { 368, 624, 8, 8 }, false },
+    { { 48, 624, 8, 8 }, false },
+    { { 304, 624, 8, 8 }, false },
+    { { 368, 624, 8, 8 }, false },
 
-    // { { 80, 656, 8, 8 }, false },
-    // { { 112, 656, 8, 8 }, false },
-    // { { 208, 656, 8, 8 }, false },
-    // { { 240, 656, 8, 8 }, false },
-    // { { 272, 656, 8, 8 }, false },
-    // { { 304, 656, 8, 8 }, false },
-    // { { 368, 656, 8, 8 }, false },
-    // { { 400, 656, 8, 8 }, false },
-    // { { 432, 656, 8, 8 }, false },
-    // { { 464, 656, 8, 8 }, false },
-    // { { 560, 656, 8, 8 }, false },
-    // { { 592, 656, 8, 8 }, false },
+    { { 80, 656, 8, 8 }, false },
+    { { 112, 656, 8, 8 }, false },
+    { { 208, 656, 8, 8 }, false },
+    { { 240, 656, 8, 8 }, false },
+    { { 272, 656, 8, 8 }, false },
+    { { 304, 656, 8, 8 }, false },
+    { { 368, 656, 8, 8 }, false },
+    { { 400, 656, 8, 8 }, false },
+    { { 432, 656, 8, 8 }, false },
+    { { 464, 656, 8, 8 }, false },
+    { { 560, 656, 8, 8 }, false },
+    { { 592, 656, 8, 8 }, false },
 
-    // { { 560, 688, 8, 8 }, false },
-    // { { 432, 688, 8, 8 }, false },
-    // { { 240, 688, 8, 8 }, false },
-    // { { 112, 688, 8, 8 }, false },
+    { { 560, 688, 8, 8 }, false },
+    { { 432, 688, 8, 8 }, false },
+    { { 240, 688, 8, 8 }, false },
+    { { 112, 688, 8, 8 }, false },
 
-    // { { 112, 720, 8, 8 }, false },
-    // { { 240, 720, 8, 8 }, false },
-    // { { 432, 720, 8, 8 }, false },
-    // { { 560, 720, 8, 8 }, false },
+    { { 112, 720, 8, 8 }, false },
+    { { 240, 720, 8, 8 }, false },
+    { { 432, 720, 8, 8 }, false },
+    { { 560, 720, 8, 8 }, false },
 
-    // { { 592, 752, 8, 8 }, false },
-    // { { 560, 752, 8, 8 }, false },
-    // { { 528, 752, 8, 8 }, false },
-    // { { 432, 752, 8, 8 }, false },
-    // { { 400, 752, 8, 8 }, false },
-    // { { 368, 752, 8, 8 }, false },
-    // { { 304, 752, 8, 8 }, false },
-    // { { 272, 752, 8, 8 }, false },
-    // { { 240, 752, 8, 8 }, false },
-    // { { 144, 752, 8, 8 }, false },
-    // { { 112, 752, 8, 8 }, false },
-    // { { 80, 752, 8, 8 }, false },
-    // { { 48, 752, 8, 8 }, false },
+    { { 592, 752, 8, 8 }, false },
+    { { 560, 752, 8, 8 }, false },
+    { { 528, 752, 8, 8 }, false },
+    { { 432, 752, 8, 8 }, false },
+    { { 400, 752, 8, 8 }, false },
+    { { 368, 752, 8, 8 }, false },
+    { { 304, 752, 8, 8 }, false },
+    { { 272, 752, 8, 8 }, false },
+    { { 240, 752, 8, 8 }, false },
+    { { 144, 752, 8, 8 }, false },
+    { { 112, 752, 8, 8 }, false },
+    { { 80, 752, 8, 8 }, false },
+    { { 48, 752, 8, 8 }, false },
 
-    // { { 48, 784, 8, 8 }, false },
-    // { { 304, 784, 8, 8 }, false },
-    // { { 368, 784, 8, 8 }, false },
+    { { 48, 784, 8, 8 }, false },
+    { { 304, 784, 8, 8 }, false },
+    { { 368, 784, 8, 8 }, false },
 
-    // { { 48, 816, 8, 8 }, false },
-    // { { 80, 816, 8, 8 }, false },
-    // { { 112, 816, 8, 8 }, false },
-    // { { 144, 816, 8, 8 }, false },
-    // { { 176, 816, 8, 8 }, false },
-    // { { 208, 816, 8, 8 }, false },
-    // { { 240, 816, 8, 8 }, false },
-    // { { 272, 816, 8, 8 }, false },
-    // { { 304, 816, 8, 8 }, false },
-    // { { 336, 816, 8, 8 }, false },
-    // { { 368, 816, 8, 8 }, false },
-    // { { 400, 816, 8, 8 }, false },
-    // { { 432, 816, 8, 8 }, false },
-    // { { 464, 816, 8, 8 }, false },
-    // { { 496, 816, 8, 8 }, false },
-    // { { 528, 816, 8, 8 }, false },
-    // { { 560, 816, 8, 8 }, false },
+    { { 48, 816, 8, 8 }, false },
+    { { 80, 816, 8, 8 }, false },
+    { { 112, 816, 8, 8 }, false },
+    { { 144, 816, 8, 8 }, false },
+    { { 176, 816, 8, 8 }, false },
+    { { 208, 816, 8, 8 }, false },
+    { { 240, 816, 8, 8 }, false },
+    { { 272, 816, 8, 8 }, false },
+    { { 304, 816, 8, 8 }, false },
+    { { 336, 816, 8, 8 }, false },
+    { { 368, 816, 8, 8 }, false },
+    { { 400, 816, 8, 8 }, false },
+    { { 432, 816, 8, 8 }, false },
+    { { 464, 816, 8, 8 }, false },
+    { { 496, 816, 8, 8 }, false },
+    { { 528, 816, 8, 8 }, false },
+    { { 560, 816, 8, 8 }, false },
     { { 592, 816, 8, 8 }, false },
 
 };
@@ -388,10 +397,11 @@ typedef struct {
 
 // Placement des big pellets
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
-//   { { 45, 108, 16, 16 }, false },
-//    { { 621, 108, 16, 16 }, false },
-//    { { 45, 650, 16, 16 }, false },
-    { { 621, 650, 16, 16 }, false },
+
+   { { 45, 108, 16, 16 }, false },
+   { { 621, 108, 16, 16 }, false },
+   { { 45, 650, 16, 16 }, false },
+   { { 621, 650, 16, 16 }, false },
 };
 
 bool checkCollision(SDL_Rect rect)
@@ -508,6 +518,7 @@ void display_highscore_title(){
         { 930, 30, 25, 25 },  // R
         { 960, 30, 25, 25 }   // E
     };
+
     SDL_Rect letters[] = {
         letterH,
         letterI,
@@ -519,6 +530,7 @@ void display_highscore_title(){
         letterR,
         letterE
     };
+
     for (int i = 0; i < 9; i++) {
         SDL_BlitScaled(plancheSprites, &letters[i], win_surf, &highscorePositions[i]);
     }
@@ -536,7 +548,7 @@ void display_score_title(){
         letterC,
         letterO,
         letterR,
-        letterE
+        letterE,
     };
     for (int i = 0; i < 5; i++) {
         SDL_BlitScaled(plancheSprites, &lettersScore[i], win_surf, &scorePositions[i]);
@@ -709,27 +721,65 @@ void draw()
     SDL_SetColorKey(plancheSprites, true, 0);
     SDL_BlitScaled(plancheSprites, &ghost_in2, win_surf, &ghost);
 
-    SDL_Rect pacman_direction;
-    if (lastDirection == SDL_SCANCODE_LEFT)
+Uint32 currentTime = SDL_GetTicks();
+if (currentTime - lastAnimationChangeTime >= animationDelay)
+{
+    // Toggle the animation state between wide open and normal
+    isWideOpen = !isWideOpen;
+    lastAnimationChangeTime = currentTime; // Update the last animation change time
+}
+
+// Determine the appropriate sprite based on the animation state and direction
+SDL_Rect pacman_direction;
+if (lastDirection == SDL_SCANCODE_LEFT)
+{
+    if (isWideOpen)
     {
-        pacman_direction = pacman_left;
-    }
-    else if (lastDirection == SDL_SCANCODE_RIGHT)
-    {
-        pacman_direction = pacman_right;
-    }
-    else if (lastDirection == SDL_SCANCODE_UP)
-    {
-        pacman_direction = pacman_up;
-    }
-    else if (lastDirection == SDL_SCANCODE_DOWN)
-    {
-        pacman_direction = pacman_down;
+        pacman_direction = pacman_wide_left;
     }
     else
     {
-        pacman_direction = pacman_closed;
+        pacman_direction = pacman_left;
     }
+}
+else if (lastDirection == SDL_SCANCODE_RIGHT)
+{
+    if (isWideOpen)
+    {
+        pacman_direction = pacman_wide_right;
+    }
+    else
+    {
+        pacman_direction = pacman_right;
+    }
+}
+else if (lastDirection == SDL_SCANCODE_UP)
+{
+    if (isWideOpen)
+    {
+        pacman_direction = pacman_wide_up;
+    }
+    else
+    {
+        pacman_direction = pacman_up;
+    }
+}
+else if (lastDirection == SDL_SCANCODE_DOWN)
+{
+    if (isWideOpen)
+    {
+        pacman_direction = pacman_wide_down;
+    }
+    else
+    {
+        pacman_direction = pacman_down;
+    }
+}
+else
+{
+    pacman_direction = pacman_closed;
+    isWideOpen = false;  // Reset animation state when not moving left
+}
 
     SDL_Rect nextPosition = pacman;
     switch (lastDirection)
@@ -747,13 +797,15 @@ void draw()
         nextPosition.y++;
         break;
     }
-    // Check collision with solid walls before updating Pacman's position
+
+    SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
+
+        // Check collision with solid walls before updating Pacman's position
     if (!checkCollision(nextPosition))
     {
         pacman = nextPosition;
     }
 
-    SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
 
     // Check if pacman enter tunnel, teleport him to the other side
     if (pacman.x < 10)
