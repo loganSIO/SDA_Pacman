@@ -10,15 +10,20 @@ SDL_Surface* win_surf = NULL;
 SDL_Surface* plancheSprites = NULL;
 TTF_Font* font = NULL;
 
+
+// Sprite definition //
+// Background
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
 
+// Ghosts
 SDL_Rect ghost_r = { 3, 123, 16, 16 };
 SDL_Rect ghost_l = { 37, 123, 16, 16 };
 SDL_Rect ghost_d = { 105, 123, 16, 16 };
 SDL_Rect ghost_u = { 71, 123, 16, 16 };
 SDL_Rect ghost = { 34, 34, 32, 32 };
 
+// Pacman
 SDL_Rect pacman_closed = { 3, 90, 16, 16 };
 SDL_Rect pacman_right = { 20, 90, 16, 16 };
 SDL_Rect pacman_left = { 46, 90, 16, 16 };
@@ -29,9 +34,10 @@ SDL_Rect pacman_wide_left = { 63, 88, 12, 16 };
 SDL_Rect pacman_wide_up = { 93, 90, 16, 16 };
 SDL_Rect pacman_wide_down = { 126, 90, 16, 16 };
 
-
+// Super pacgum
 SDL_Rect bigPellet = { 9, 79, 8, 8 };
 
+// Letters
 SDL_Rect letterA = { 12, 61, 7, 7 };
 SDL_Rect letterB = { 20, 61, 7, 7 };
 SDL_Rect letterC = { 28, 61, 7, 7 };
@@ -47,7 +53,6 @@ SDL_Rect letterL = { 100, 61, 7, 7 };
 SDL_Rect letterM = { 108, 61, 7, 7 };
 SDL_Rect letterN = { 116, 61, 7, 7 };
 SDL_Rect letterO = { 124, 61, 7, 7 };
-
 SDL_Rect letterP = { 4, 69, 7, 7 };
 SDL_Rect letterQ = { 12, 69, 7, 7 };
 SDL_Rect letterR = { 20, 69, 7, 7 };
@@ -60,6 +65,7 @@ SDL_Rect letterX = { 68, 69, 7, 7 };
 SDL_Rect letterY = { 76, 69, 7, 7 };
 SDL_Rect letterZ = { 84, 69, 7, 7 };
 
+// Numbers
 SDL_Rect number0 = { 4, 53, 7, 7 };
 SDL_Rect number1 = { 12, 53, 7, 7 };
 SDL_Rect number2 = { 20, 53, 7, 7 };
@@ -71,30 +77,33 @@ SDL_Rect number7 = { 60, 53, 7, 7 };
 SDL_Rect number8 = { 68, 53, 7, 7 };
 SDL_Rect number9 = { 76, 53, 7, 7 };
 
+// Other caracteres
 SDL_Rect tiret = { 84, 53, 7, 7 };
+SDL_Rect exclamation = { 101, 52, 7, 7 };
+SDL_Rect espace = { 115, 52, 7, 7 };
+
+// Global variables
+SDL_Rect pacman = { 325, 646, 32, 32 };
+int lifes = 3;
+int score = 0;
+int highscore = 0;
 
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
 bool gameOver = false;
 bool isWideOpen = false;
-int lifes = 3;
 
 Uint32 lastAnimationChangeTime = 0;
 int animationDelay = 200;
-
-int score = 0;
-int highscore = 0;
-
+int lastDirection = -1; 
 int count;
 
-SDL_Rect pacman = { 325, 646, 32, 32 };
-int lastDirection = -1; // Store the last key pressed direction
-
 #define NUM_WALLS 47
-#define NUM_PELLETS 192
-#define NUM_BIG_PELLETS 4
+#define NUM_PELLETS 1
+#define NUM_BIG_PELLETS 0
 
+// Wall placement
 SDL_Rect walls[NUM_WALLS] = {
    // Sides of the map
    { 0, 0, 1680, 31 },         // Top wall
@@ -174,236 +183,239 @@ SDL_Rect walls[NUM_WALLS] = {
 
 };
 
+// Pacgum definition
 typedef struct {
     SDL_Rect rect;
     bool eaten;
 } Pellet;
 
+// Pacgum placement
 Pellet pellets[NUM_PELLETS] = {
     { { 176, 48, 8, 8 }, false },
-    { { 176, 80, 8, 8 }, false },
-    { { 176, 112, 8, 8 }, false },
-    { { 176, 144, 8, 8 }, false },
-    { { 176, 176, 8, 8 }, false },
-    { { 176, 208, 8, 8 }, false },
-    { { 176, 240, 8, 8 }, false },
-    { { 176, 272, 8, 8 }, false },
-    { { 176, 304, 8, 8 }, false },
-    { { 176, 336, 8, 8 }, false },
-    { { 176, 368, 8, 8 }, false },
-    { { 176, 400, 8, 8 }, false },
-    { { 176, 432, 8, 8 }, false },
-    { { 176, 464, 8, 8 }, false },
-    { { 176, 496, 8, 8 }, false },
-    { { 176, 528, 8, 8 }, false },
-    { { 176, 560, 8, 8 }, false },
-    { { 176, 592, 8, 8 }, false },
-    { { 176, 624, 8, 8 }, false },
-    { { 176, 656, 8, 8 }, false },
-    { { 176, 688, 8, 8 }, false },
-    { { 176, 720, 8, 8 }, false },
-    { { 176, 752, 8, 8 }, false },
+    // { { 176, 80, 8, 8 }, false },
+    // { { 176, 112, 8, 8 }, false },
+    // { { 176, 144, 8, 8 }, false },
+    // { { 176, 176, 8, 8 }, false },
+    // { { 176, 208, 8, 8 }, false },
+    // { { 176, 240, 8, 8 }, false },
+    // { { 176, 272, 8, 8 }, false },
+    // { { 176, 304, 8, 8 }, false },
+    // { { 176, 336, 8, 8 }, false },
+    // { { 176, 368, 8, 8 }, false },
+    // { { 176, 400, 8, 8 }, false },
+    // { { 176, 432, 8, 8 }, false },
+    // { { 176, 464, 8, 8 }, false },
+    // { { 176, 496, 8, 8 }, false },
+    // { { 176, 528, 8, 8 }, false },
+    // { { 176, 560, 8, 8 }, false },
+    // { { 176, 592, 8, 8 }, false },
+    // { { 176, 624, 8, 8 }, false },
+    // { { 176, 656, 8, 8 }, false },
+    // { { 176, 688, 8, 8 }, false },
+    // { { 176, 720, 8, 8 }, false },
+    // { { 176, 752, 8, 8 }, false },
 
-    { { 48, 176, 8, 8 }, false },
-    { { 80, 176, 8, 8 }, false },
-    { { 112, 176, 8, 8 }, false },
-    { { 144, 176, 8, 8 }, false },
-    { { 176, 176, 8, 8 }, false },
-    { { 208, 176, 8, 8 }, false },
-    { { 240, 176, 8, 8 }, false },
-    { { 272, 176, 8, 8 }, false },
-    { { 304, 176, 8, 8 }, false },
-    { { 336, 176, 8, 8 }, false },
-    { { 368, 176, 8, 8 }, false },
-    { { 400, 176, 8, 8 }, false },
-    { { 432, 176, 8, 8 }, false },
-    { { 464, 176, 8, 8 }, false },
-    { { 496, 176, 8, 8 }, false },
-    { { 528, 176, 8, 8 }, false },
-    { { 560, 176, 8, 8 }, false },
-    { { 592, 176, 8, 8 }, false },
-    { { 624, 176, 8, 8 }, false },
+    // { { 48, 176, 8, 8 }, false },
+    // { { 80, 176, 8, 8 }, false },
+    // { { 112, 176, 8, 8 }, false },
+    // { { 144, 176, 8, 8 }, false },
+    // { { 176, 176, 8, 8 }, false },
+    // { { 208, 176, 8, 8 }, false },
+    // { { 240, 176, 8, 8 }, false },
+    // { { 272, 176, 8, 8 }, false },
+    // { { 304, 176, 8, 8 }, false },
+    // { { 336, 176, 8, 8 }, false },
+    // { { 368, 176, 8, 8 }, false },
+    // { { 400, 176, 8, 8 }, false },
+    // { { 432, 176, 8, 8 }, false },
+    // { { 464, 176, 8, 8 }, false },
+    // { { 496, 176, 8, 8 }, false },
+    // { { 528, 176, 8, 8 }, false },
+    // { { 560, 176, 8, 8 }, false },
+    // { { 592, 176, 8, 8 }, false },
+    // { { 624, 176, 8, 8 }, false },
 
-    { { 48, 48, 8, 8 }, false },
-    { { 48, 80, 8, 8 }, false },
-    { { 48, 144, 8, 8 }, false },
-    { { 48, 176, 8, 8 }, false },
-    { { 48, 208, 8, 8 }, false },
-    { { 48, 240, 8, 8 }, false },
-    { { 48, 272, 8, 8 }, false },
+    // { { 48, 48, 8, 8 }, false },
+    // { { 48, 80, 8, 8 }, false },
+    // { { 48, 144, 8, 8 }, false },
+    // { { 48, 176, 8, 8 }, false },
+    // { { 48, 208, 8, 8 }, false },
+    // { { 48, 240, 8, 8 }, false },
+    // { { 48, 272, 8, 8 }, false },
 
-    { { 80, 48, 8, 8 }, false },
-    { { 112, 48, 8, 8 }, false },
-    { { 144, 48, 8, 8 }, false },
-    { { 208, 48, 8, 8 }, false },
-    { { 240, 48, 8, 8 }, false },
-    { { 272, 48, 8, 8 }, false },
-    { { 304, 48, 8, 8 }, false },
+    // { { 80, 48, 8, 8 }, false },
+    // { { 112, 48, 8, 8 }, false },
+    // { { 144, 48, 8, 8 }, false },
+    // { { 208, 48, 8, 8 }, false },
+    // { { 240, 48, 8, 8 }, false },
+    // { { 272, 48, 8, 8 }, false },
+    // { { 304, 48, 8, 8 }, false },
 
-    { { 304, 80, 8, 8 }, false },
-    { { 304, 112, 8, 8 }, false },
-    { { 304, 144, 8, 8 }, false },
+    // { { 304, 80, 8, 8 }, false },
+    // { { 304, 112, 8, 8 }, false },
+    // { { 304, 144, 8, 8 }, false },
 
-    { { 368, 48, 8, 8 }, false },
-    { { 400, 48, 8, 8 }, false },
-    { { 432, 48, 8, 8 }, false },
-    { { 464, 48, 8, 8 }, false },
-    { { 496, 48, 8, 8 }, false },
-    { { 528, 48, 8, 8 }, false },
-    { { 560, 48, 8, 8 }, false },
-    { { 592, 48, 8, 8 }, false },
-    { { 624, 48, 8, 8 }, false },
+    // { { 368, 48, 8, 8 }, false },
+    // { { 400, 48, 8, 8 }, false },
+    // { { 432, 48, 8, 8 }, false },
+    // { { 464, 48, 8, 8 }, false },
+    // { { 496, 48, 8, 8 }, false },
+    // { { 528, 48, 8, 8 }, false },
+    // { { 560, 48, 8, 8 }, false },
+    // { { 592, 48, 8, 8 }, false },
+    // { { 624, 48, 8, 8 }, false },
 
-    { { 368, 80, 8, 8 }, false },
-    { { 368, 112, 8, 8 }, false },
-    { { 368, 144, 8, 8 }, false },
+    // { { 368, 80, 8, 8 }, false },
+    // { { 368, 112, 8, 8 }, false },
+    // { { 368, 144, 8, 8 }, false },
 
-    { { 496, 80, 8, 8 }, false },
-    { { 496, 112, 8, 8 }, false },
-    { { 496, 144, 8, 8 }, false },
-    { { 496, 176, 8, 8 }, false },
-    { { 496, 208, 8, 8 }, false },
-    { { 496, 240, 8, 8 }, false },
-    { { 496, 272, 8, 8 }, false },
-    { { 496, 304, 8, 8 }, false },
-    { { 496, 336, 8, 8 }, false },
-    { { 496, 368, 8, 8 }, false },
-    { { 496, 400, 8, 8 }, false },
-    { { 496, 432, 8, 8 }, false },
-    { { 496, 464, 8, 8 }, false },
-    { { 496, 496, 8, 8 }, false },
-    { { 496, 528, 8, 8 }, false },
-    { { 496, 560, 8, 8 }, false },
-    { { 496, 592, 8, 8 }, false },
-    { { 496, 624, 8, 8 }, false },
-    { { 496, 656, 8, 8 }, false },
-    { { 496, 688, 8, 8 }, false },
-    { { 496, 720, 8, 8 }, false },
-    { { 496, 752, 8, 8 }, false },
+    // { { 496, 80, 8, 8 }, false },
+    // { { 496, 112, 8, 8 }, false },
+    // { { 496, 144, 8, 8 }, false },
+    // { { 496, 176, 8, 8 }, false },
+    // { { 496, 208, 8, 8 }, false },
+    // { { 496, 240, 8, 8 }, false },
+    // { { 496, 272, 8, 8 }, false },
+    // { { 496, 304, 8, 8 }, false },
+    // { { 496, 336, 8, 8 }, false },
+    // { { 496, 368, 8, 8 }, false },
+    // { { 496, 400, 8, 8 }, false },
+    // { { 496, 432, 8, 8 }, false },
+    // { { 496, 464, 8, 8 }, false },
+    // { { 496, 496, 8, 8 }, false },
+    // { { 496, 528, 8, 8 }, false },
+    // { { 496, 560, 8, 8 }, false },
+    // { { 496, 592, 8, 8 }, false },
+    // { { 496, 624, 8, 8 }, false },
+    // { { 496, 656, 8, 8 }, false },
+    // { { 496, 688, 8, 8 }, false },
+    // { { 496, 720, 8, 8 }, false },
+    // { { 496, 752, 8, 8 }, false },
 
-    { { 80, 272, 8, 8 }, false },
-    { { 112, 272, 8, 8 }, false },
-    { { 144, 272, 8, 8 }, false },
-    { { 240, 272, 8, 8 }, false },
-    { { 272, 272, 8, 8 }, false },
-    { { 304, 272, 8, 8 }, false },
-    { { 368, 272, 8, 8 }, false },
-    { { 400, 272, 8, 8 }, false },
-    { { 432, 272, 8, 8 }, false },
-    { { 528, 272, 8, 8 }, false },
-    { { 560, 272, 8, 8 }, false },
-    { { 592, 272, 8, 8 }, false },
-    { { 624, 272, 8, 8 }, false },
-    // Last Column
-    { { 624, 80, 8, 8 }, false },
-    { { 624, 144, 8, 8 }, false },
-    { { 624, 176, 8, 8 }, false },
-    { { 624, 208, 8, 8 }, false },
-    { { 624, 240, 8, 8 }, false },
-    { { 624, 592, 8, 8 }, false },
-    { { 624, 624, 8, 8 }, false },
-    { { 624, 752, 8, 8 }, false },
-    { { 624, 784, 8, 8 }, false },
-    { { 624, 816, 8, 8 }, false },
+    // { { 80, 272, 8, 8 }, false },
+    // { { 112, 272, 8, 8 }, false },
+    // { { 144, 272, 8, 8 }, false },
+    // { { 240, 272, 8, 8 }, false },
+    // { { 272, 272, 8, 8 }, false },
+    // { { 304, 272, 8, 8 }, false },
+    // { { 368, 272, 8, 8 }, false },
+    // { { 400, 272, 8, 8 }, false },
+    // { { 432, 272, 8, 8 }, false },
+    // { { 528, 272, 8, 8 }, false },
+    // { { 560, 272, 8, 8 }, false },
+    // { { 592, 272, 8, 8 }, false },
+    // { { 624, 272, 8, 8 }, false },
+    // // Last Column
+    // { { 624, 80, 8, 8 }, false },
+    // { { 624, 144, 8, 8 }, false },
+    // { { 624, 176, 8, 8 }, false },
+    // { { 624, 208, 8, 8 }, false },
+    // { { 624, 240, 8, 8 }, false },
+    // { { 624, 592, 8, 8 }, false },
+    // { { 624, 624, 8, 8 }, false },
+    // { { 624, 752, 8, 8 }, false },
+    // { { 624, 784, 8, 8 }, false },
+    // { { 624, 816, 8, 8 }, false },
 
-    { { 240, 208, 8, 8 }, false },
-    { { 240, 240, 8, 8 }, false },
-    { { 432, 208, 8, 8 }, false },
-    { { 432, 240, 8, 8 }, false },
+    // { { 240, 208, 8, 8 }, false },
+    // { { 240, 240, 8, 8 }, false },
+    // { { 432, 208, 8, 8 }, false },
+    // { { 432, 240, 8, 8 }, false },
 
-    { { 528, 592, 8, 8 }, false },
-    { { 560, 592, 8, 8 }, false },
-    { { 592, 592, 8, 8 }, false },
-    { { 464, 592, 8, 8 }, false },
-    { { 432, 592, 8, 8 }, false },
-    { { 400, 592, 8, 8 }, false },
-    { { 368, 592, 8, 8 }, false },
-    { { 304, 592, 8, 8 }, false },
-    { { 272, 592, 8, 8 }, false },
-    { { 240, 592, 8, 8 }, false },
-    { { 208, 592, 8, 8 }, false },
-    { { 144, 592, 8, 8 }, false },
-    { { 112, 592, 8, 8 }, false },
-    { { 80, 592, 8, 8 }, false },
-    { { 48, 592, 8, 8 }, false },
+    // { { 528, 592, 8, 8 }, false },
+    // { { 560, 592, 8, 8 }, false },
+    // { { 592, 592, 8, 8 }, false },
+    // { { 464, 592, 8, 8 }, false },
+    // { { 432, 592, 8, 8 }, false },
+    // { { 400, 592, 8, 8 }, false },
+    // { { 368, 592, 8, 8 }, false },
+    // { { 304, 592, 8, 8 }, false },
+    // { { 272, 592, 8, 8 }, false },
+    // { { 240, 592, 8, 8 }, false },
+    // { { 208, 592, 8, 8 }, false },
+    // { { 144, 592, 8, 8 }, false },
+    // { { 112, 592, 8, 8 }, false },
+    // { { 80, 592, 8, 8 }, false },
+    // { { 48, 592, 8, 8 }, false },
 
-    { { 48, 624, 8, 8 }, false },
-    { { 304, 624, 8, 8 }, false },
-    { { 368, 624, 8, 8 }, false },
+    // { { 48, 624, 8, 8 }, false },
+    // { { 304, 624, 8, 8 }, false },
+    // { { 368, 624, 8, 8 }, false },
 
-    { { 80, 656, 8, 8 }, false },
-    { { 112, 656, 8, 8 }, false },
-    { { 208, 656, 8, 8 }, false },
-    { { 240, 656, 8, 8 }, false },
-    { { 272, 656, 8, 8 }, false },
-    { { 304, 656, 8, 8 }, false },
-    { { 368, 656, 8, 8 }, false },
-    { { 400, 656, 8, 8 }, false },
-    { { 432, 656, 8, 8 }, false },
-    { { 464, 656, 8, 8 }, false },
-    { { 560, 656, 8, 8 }, false },
-    { { 592, 656, 8, 8 }, false },
+    // { { 80, 656, 8, 8 }, false },
+    // { { 112, 656, 8, 8 }, false },
+    // { { 208, 656, 8, 8 }, false },
+    // { { 240, 656, 8, 8 }, false },
+    // { { 272, 656, 8, 8 }, false },
+    // { { 304, 656, 8, 8 }, false },
+    // { { 368, 656, 8, 8 }, false },
+    // { { 400, 656, 8, 8 }, false },
+    // { { 432, 656, 8, 8 }, false },
+    // { { 464, 656, 8, 8 }, false },
+    // { { 560, 656, 8, 8 }, false },
+    // { { 592, 656, 8, 8 }, false },
 
-    { { 560, 688, 8, 8 }, false },
-    { { 432, 688, 8, 8 }, false },
-    { { 240, 688, 8, 8 }, false },
-    { { 112, 688, 8, 8 }, false },
+    // { { 560, 688, 8, 8 }, false },
+    // { { 432, 688, 8, 8 }, false },
+    // { { 240, 688, 8, 8 }, false },
+    // { { 112, 688, 8, 8 }, false },
 
-    { { 112, 720, 8, 8 }, false },
-    { { 240, 720, 8, 8 }, false },
-    { { 432, 720, 8, 8 }, false },
-    { { 560, 720, 8, 8 }, false },
+    // { { 112, 720, 8, 8 }, false },
+    // { { 240, 720, 8, 8 }, false },
+    // { { 432, 720, 8, 8 }, false },
+    // { { 560, 720, 8, 8 }, false },
 
-    { { 592, 752, 8, 8 }, false },
-    { { 560, 752, 8, 8 }, false },
-    { { 528, 752, 8, 8 }, false },
-    { { 432, 752, 8, 8 }, false },
-    { { 400, 752, 8, 8 }, false },
-    { { 368, 752, 8, 8 }, false },
-    { { 304, 752, 8, 8 }, false },
-    { { 272, 752, 8, 8 }, false },
-    { { 240, 752, 8, 8 }, false },
-    { { 144, 752, 8, 8 }, false },
-    { { 112, 752, 8, 8 }, false },
-    { { 80, 752, 8, 8 }, false },
-    { { 48, 752, 8, 8 }, false },
+    // { { 592, 752, 8, 8 }, false },
+    // { { 560, 752, 8, 8 }, false },
+    // { { 528, 752, 8, 8 }, false },
+    // { { 432, 752, 8, 8 }, false },
+    // { { 400, 752, 8, 8 }, false },
+    // { { 368, 752, 8, 8 }, false },
+    // { { 304, 752, 8, 8 }, false },
+    // { { 272, 752, 8, 8 }, false },
+    // { { 240, 752, 8, 8 }, false },
+    // { { 144, 752, 8, 8 }, false },
+    // { { 112, 752, 8, 8 }, false },
+    // { { 80, 752, 8, 8 }, false },
+    // { { 48, 752, 8, 8 }, false },
 
-    { { 48, 784, 8, 8 }, false },
-    { { 304, 784, 8, 8 }, false },
-    { { 368, 784, 8, 8 }, false },
+    // { { 48, 784, 8, 8 }, false },
+    // { { 304, 784, 8, 8 }, false },
+    // { { 368, 784, 8, 8 }, false },
 
-    { { 48, 816, 8, 8 }, false },
-    { { 80, 816, 8, 8 }, false },
-    { { 112, 816, 8, 8 }, false },
-    { { 144, 816, 8, 8 }, false },
-    { { 176, 816, 8, 8 }, false },
-    { { 208, 816, 8, 8 }, false },
-    { { 240, 816, 8, 8 }, false },
-    { { 272, 816, 8, 8 }, false },
-    { { 304, 816, 8, 8 }, false },
-    { { 336, 816, 8, 8 }, false },
-    { { 368, 816, 8, 8 }, false },
-    { { 400, 816, 8, 8 }, false },
-    { { 432, 816, 8, 8 }, false },
-    { { 464, 816, 8, 8 }, false },
-    { { 496, 816, 8, 8 }, false },
-    { { 528, 816, 8, 8 }, false },
-    { { 560, 816, 8, 8 }, false },
-    { { 592, 816, 8, 8 }, false },
+    // { { 48, 816, 8, 8 }, false },
+    // { { 80, 816, 8, 8 }, false },
+    // { { 112, 816, 8, 8 }, false },
+    // { { 144, 816, 8, 8 }, false },
+    // { { 176, 816, 8, 8 }, false },
+    // { { 208, 816, 8, 8 }, false },
+    // { { 240, 816, 8, 8 }, false },
+    // { { 272, 816, 8, 8 }, false },
+    // { { 304, 816, 8, 8 }, false },
+    // { { 336, 816, 8, 8 }, false },
+    // { { 368, 816, 8, 8 }, false },
+    // { { 400, 816, 8, 8 }, false },
+    // { { 432, 816, 8, 8 }, false },
+    // { { 464, 816, 8, 8 }, false },
+    // { { 496, 816, 8, 8 }, false },
+    // { { 528, 816, 8, 8 }, false },
+    // { { 560, 816, 8, 8 }, false },
+    // { { 592, 816, 8, 8 }, false },
 
 };
 
+// Super pacgum definition
 typedef struct {
    SDL_Rect rect;
    bool eaten;
 } BigPellet;
 
-// Placement des big pellets
+// Super pacgum placement
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
-   { { 45, 108, 16, 16 }, false },
-   { { 621, 108, 16, 16 }, false },
-   { { 45, 650, 16, 16 }, false },
-   { { 621, 650, 16, 16 }, false },
+   //{ { 45, 108, 16, 16 }, false },
+   //{ { 621, 108, 16, 16 }, false },
+   //{ { 45, 650, 16, 16 }, false },
+   //{ { 621, 650, 16, 16 }, false },
 };
 
 void init()
@@ -429,15 +441,6 @@ void init()
     if (chdir(fontDirectory) != 0)
     {
         fprintf(stderr, "Failed to set working directory to font directory.\n");
-        // Handle the error accordingly
-    }
-
-    // Initialize SDL_ttf
-    TTF_Init();
-    font = TTF_OpenFont("pacman.ttf", 32);
-        if (font == NULL)
-    {
-        fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
         // Handle the error accordingly
     }
 }
@@ -627,13 +630,10 @@ void respawn(){
     // animation de mort TODO
 
     // Reset the position of pacman and the ghost
-    pacman.x = 325;
-    pacman.y = 646;
     ghost = (SDL_Rect){ 325, 386, 32, 32 };
+    pacman = (SDL_Rect){ 325, 646, 32, 32 }; // Reset Pacman's position (idk why ça marche pas ici)
 
     lastDirection = SDL_SCANCODE_RIGHT;
-    SDL_BlitScaled(plancheSprites, &pacman_right, win_surf, &pacman);
-    
     SDL_Delay(1000);
 }
 
@@ -838,7 +838,7 @@ else
 
     SDL_BlitScaled(plancheSprites, &pacman_direction, win_surf, &pacman);
 
-        // Check collision with solid walls before updating Pacman's position
+    // Check collision with solid walls before updating Pacman's position
     if (!checkCollision(nextPosition))
     {
         pacman = nextPosition;
@@ -853,62 +853,43 @@ else
     {
         pacman.x = 10;
     }
-
 }
 
-void drawMenu(SDL_Surface* surface, bool isWinMenu)
-{
-    // Clear the surface
+void drawEndMenu(SDL_Surface* surface, bool isWinMenu) {
+    // Remplir la surface avec une couleur de fond noire
     SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
 
-    // Load the font
-    TTF_Font* font = TTF_OpenFont("pacman.ttf", 32);
-    if (font == NULL)
-    {
-        fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
-        // Handle the error accordingly
-    }
-
-    // Create a surface for the menu options
-    SDL_Surface* textSurfaceRetry = TTF_RenderText_Solid(font, "Retry (R)", (SDL_Color){255, 255, 255});
-    SDL_Surface* textSurfaceQuit = TTF_RenderText_Solid(font, "Quit (Q)", (SDL_Color){255, 255, 255});
-    if (textSurfaceRetry == NULL || textSurfaceQuit == NULL)
-    {
-        fprintf(stderr, "Failed to render text surface: %s\n", TTF_GetError());
-        // Handle the error accordingly
-    }
-
-    // Calculate the position to display the menu options on the screen
-    int textX = (surface->w - textSurfaceRetry->w) / 2;
-    int textY = (surface->h - textSurfaceRetry->h) / 2;
-
-    // Blit the menu options onto the surface
-    SDL_BlitSurface(textSurfaceRetry, NULL, surface, &(SDL_Rect){textX, textY, 0, 0});
-    SDL_BlitSurface(textSurfaceQuit, NULL, surface, &(SDL_Rect){textX, textY + textSurfaceRetry->h + 10, 0, 0});
-
-    // If it's the win menu, render the win message on top
-    if (isWinMenu)
-    {
-        SDL_Surface* winMessage = TTF_RenderText_Solid(font, "You Win!", (SDL_Color){255, 255, 255});
-        if (winMessage == NULL)
-        {
-            fprintf(stderr, "Failed to render win message surface: %s\n", TTF_GetError());
-            // Handle the error accordingly
+    // Afficher le message "You Win!" ou "You Lost!"
+    if (isWinMenu) {
+        SDL_Rect youWinPos = { surface->w / 2 - 120, surface->h / 2 - 250, 25, 25 };
+        SDL_Rect youWinLetters[9] = { letterY, letterO, letterU, espace, letterW, letterI, letterN, espace, exclamation};
+        for (int i = 0; i < 9; i++) {
+            SDL_BlitScaled(plancheSprites, &youWinLetters[i], surface, &youWinPos);
+            youWinPos.x += 30;
         }
-
-        int messageX = (surface->w - winMessage->w) / 2;
-        int messageY = (surface->h - winMessage->h) / 4;
-        SDL_BlitSurface(winMessage, NULL, surface, &(SDL_Rect){messageX, messageY, 0, 0});
-
-        SDL_FreeSurface(winMessage);
+    } else {
+        SDL_Rect youLostPos = { surface->w / 2 - 160, surface->h / 2 - 250, 25, 25 };
+        SDL_Rect youLostLetters[10] = { letterY, letterO, letterU, espace, letterL, letterO, letterS, letterT, espace, exclamation};
+        for (int i = 0; i < 10; i++) {
+            SDL_BlitScaled(plancheSprites, &youLostLetters[i], surface, &youLostPos);
+            youLostPos.x += 30;
+        }
     }
 
-    // Free the text surfaces
-    SDL_FreeSurface(textSurfaceRetry);
-    SDL_FreeSurface(textSurfaceQuit);
+    // Afficher les choix "Rejouer - R" et "Quitter - Q"
+    SDL_Rect replayPos = { surface->w / 2 - 140, surface->h / 2 - 60, 25, 25 };
+    SDL_Rect replayLetters[10] = { letterR, letterE, letterJ, letterO, letterU, letterE, letterR, espace, tiret, letterR };
+    for (int i = 0; i < 10; i++) {
+        SDL_BlitScaled(plancheSprites, &replayLetters[i], surface, &replayPos);
+        replayPos.x += 30;
+    }
 
-    // Close the font
-    TTF_CloseFont(font);
+    SDL_Rect quitPos = { surface->w / 2 - 140, surface->h / 2 - 10, 25, 25 };
+    SDL_Rect quitLetters[10] = { letterQ, letterU, letterI, letterT, letterT, letterE, letterR, espace, tiret, letterQ };
+    for (int i = 0; i < 10; i++) {
+        SDL_BlitScaled(plancheSprites, &quitLetters[i], surface, &quitPos);
+        quitPos.x += 30;
+    }
 }
 
 void handleInput(SDL_Event* event)
@@ -943,6 +924,7 @@ void restartGame()
     // Reset the game state and variables
     isPelletEaten = false;
     bool isBigPelletEaten = false;
+    gameOver = false;
     gameWon = false;
     if (score > highscore) {
         highscore = score;
@@ -956,12 +938,10 @@ void restartGame()
     {
         pellets[i].eaten = false;
     }
-
     for (int i = 0; i < NUM_BIG_PELLETS; i++)
     {
         bigPellets[i].eaten = false;
     }
-
 }
 
 void gameLoop()
@@ -1027,7 +1007,7 @@ void gameLoop()
         {
             // Draw the win menu
             SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
-            drawMenu(win_surf, true);
+            drawEndMenu(win_surf, true);
             SDL_UpdateWindowSurface(pWindow);
 
             bool menuActive = true;
