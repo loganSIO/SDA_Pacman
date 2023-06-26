@@ -19,6 +19,25 @@ SDL_Rect ghost_d = { 105, 123, 16, 16 };
 SDL_Rect ghost_u = { 71, 123, 16, 16 };
 SDL_Rect ghost = { 34, 34, 32, 32 };
 
+SDL_Rect ghost_cyan_r = { 3, 159, 16, 16 };
+SDL_Rect ghost_cyan_l = { 37, 159, 16, 16 };
+SDL_Rect ghost_cyan_d = { 105, 159, 16, 16 };
+SDL_Rect ghost_cyan_u = { 71, 159, 16, 16 };
+SDL_Rect ghost_cyan = { 34, 34, 32, 32 };
+
+SDL_Rect ghost_pink_r = { 3, 141, 16, 16 };
+SDL_Rect ghost_pink_l = { 37, 141, 16, 16 };
+SDL_Rect ghost_pink_d = { 105, 141, 16, 16 };
+SDL_Rect ghost_pink_u = { 71, 141, 16, 16 };
+SDL_Rect ghost_pink = { 34, 34, 32, 32 };
+
+SDL_Rect ghost_orange_r = { 3, 177, 16, 16 };
+SDL_Rect ghost_orange_l = { 37, 177, 16, 16 };
+SDL_Rect ghost_orange_d = { 105, 177, 16, 16 };
+SDL_Rect ghost_orange_u = { 71, 177, 16, 16 };
+SDL_Rect ghost_orange = { 34, 34, 32, 32 };
+
+
 SDL_Rect pacman_closed = { 3, 90, 16, 16 };
 SDL_Rect pacman_right = { 20, 90, 16, 16 };
 SDL_Rect pacman_left = { 46, 90, 16, 16 };
@@ -90,7 +109,7 @@ int lastDirection = -1; // Store the last key pressed direction
 
 #define NUM_WALLS 47
 #define NUM_PELLETS 192
-#define NUM_BIG_PELLETS 1
+#define NUM_BIG_PELLETS 4
 
 SDL_Rect walls[NUM_WALLS] = {
    // Sides of the map
@@ -690,8 +709,6 @@ void draw()
 
     draw_all_pellets();
 
-
-
     SDL_Rect* ghost_in = NULL;
     switch (count / 128)
     {
@@ -721,65 +738,78 @@ void draw()
     SDL_SetColorKey(plancheSprites, true, 0);
     SDL_BlitScaled(plancheSprites, &ghost_in2, win_surf, &ghost);
 
-Uint32 currentTime = SDL_GetTicks();
-if (currentTime - lastAnimationChangeTime >= animationDelay)
-{
-    // Toggle the animation state between wide open and normal
-    isWideOpen = !isWideOpen;
-    lastAnimationChangeTime = currentTime; // Update the last animation change time
-}
+    // Spawn point cyan ghost
+    SDL_Rect cyanGhost = { 295, 400, 32, 32 }; // Initial sprite direction
+    SDL_BlitScaled(plancheSprites, &ghost_cyan_u, win_surf, &cyanGhost);
 
-// Determine the appropriate sprite based on the animation state and direction
-SDL_Rect pacman_direction;
-if (lastDirection == SDL_SCANCODE_LEFT)
-{
-    if (isWideOpen)
+    // Spawn point pink ghost
+    SDL_Rect pinkGhost = { 325, 400, 32, 32 }; // Initial sprite direction
+    SDL_BlitScaled(plancheSprites, &ghost_pink_d, win_surf, &pinkGhost);
+
+    // Spawn point orange ghost
+    SDL_Rect orangeGhost = { 355, 400, 32, 32 }; // Initial sprite direction
+    SDL_BlitScaled(plancheSprites, &ghost_orange_u, win_surf, &orangeGhost);
+
+
+    Uint32 currentTime = SDL_GetTicks();
+    if (currentTime - lastAnimationChangeTime >= animationDelay)
     {
-        pacman_direction = pacman_wide_left;
+        // Toggle the animation state between wide open and normal
+        isWideOpen = !isWideOpen;
+        lastAnimationChangeTime = currentTime; // Update the last animation change time
+    }
+
+    // Determine the appropriate sprite based on the animation state and direction
+    SDL_Rect pacman_direction;
+    if (lastDirection == SDL_SCANCODE_LEFT)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_left;
+        }
+        else
+        {
+            pacman_direction = pacman_left;
+        }
+    }
+    else if (lastDirection == SDL_SCANCODE_RIGHT)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_right;
+        }
+        else
+        {
+            pacman_direction = pacman_right;
+        }
+    }
+    else if (lastDirection == SDL_SCANCODE_UP)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_up;
+        }
+        else
+        {
+            pacman_direction = pacman_up;
+        }
+    }
+    else if (lastDirection == SDL_SCANCODE_DOWN)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_down;
+        }
+        else
+        {
+            pacman_direction = pacman_down;
+        }
     }
     else
     {
-        pacman_direction = pacman_left;
+        pacman_direction = pacman_closed;
+        isWideOpen = false;  // Reset animation state when not moving left
     }
-}
-else if (lastDirection == SDL_SCANCODE_RIGHT)
-{
-    if (isWideOpen)
-    {
-        pacman_direction = pacman_wide_right;
-    }
-    else
-    {
-        pacman_direction = pacman_right;
-    }
-}
-else if (lastDirection == SDL_SCANCODE_UP)
-{
-    if (isWideOpen)
-    {
-        pacman_direction = pacman_wide_up;
-    }
-    else
-    {
-        pacman_direction = pacman_up;
-    }
-}
-else if (lastDirection == SDL_SCANCODE_DOWN)
-{
-    if (isWideOpen)
-    {
-        pacman_direction = pacman_wide_down;
-    }
-    else
-    {
-        pacman_direction = pacman_down;
-    }
-}
-else
-{
-    pacman_direction = pacman_closed;
-    isWideOpen = false;  // Reset animation state when not moving left
-}
 
     SDL_Rect nextPosition = pacman;
     switch (lastDirection)
