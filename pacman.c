@@ -55,24 +55,25 @@ SDL_Rect letterX = { 68, 69, 7, 7 };
 SDL_Rect letterY = { 76, 69, 7, 7 };
 SDL_Rect letterZ = { 84, 69, 7, 7 };
 
-SDL_Rect number0 = { 4, 26, 7, 7 };
-SDL_Rect number1 = { 12, 26, 7, 7 };
-SDL_Rect number2 = { 20, 26, 7, 7 };
-SDL_Rect number3 = { 28, 26, 7, 7 };
-SDL_Rect number4 = { 36, 26, 7, 7 };
-SDL_Rect number5 = { 44, 26, 7, 7 };
-SDL_Rect number6 = { 52, 26, 7, 7 };
-SDL_Rect number7 = { 60, 26, 7, 7 };
-SDL_Rect number8 = { 68, 26, 7, 7 };
-SDL_Rect number9 = { 76, 26, 7, 7 };
+SDL_Rect number0 = { 4, 53, 7, 7 };
+SDL_Rect number1 = { 12, 53, 7, 7 };
+SDL_Rect number2 = { 20, 53, 7, 7 };
+SDL_Rect number3 = { 28, 53, 7, 7 };
+SDL_Rect number4 = { 36, 53, 7, 7 };
+SDL_Rect number5 = { 44, 53, 7, 7 };
+SDL_Rect number6 = { 52, 53, 7, 7 };
+SDL_Rect number7 = { 60, 53, 7, 7 };
+SDL_Rect number8 = { 68, 53, 7, 7 };
+SDL_Rect number9 = { 76, 53, 7, 7 };
 
-SDL_Rect tiret = { 84, 26, 7, 7 };
+SDL_Rect tiret = { 84, 53, 7, 7 };
 
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
 
 int score = 0;
+int highscore = 0;
 int count;
 
 SDL_Rect pacman = { 340 - (16 / 2), 650 - (16 / 2), 32, 32 };
@@ -387,10 +388,10 @@ typedef struct {
 
 // Placement des big pellets
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
-   { { 45, 108, 16, 16 }, false },
+//   { { 45, 108, 16, 16 }, false },
 //    { { 621, 108, 16, 16 }, false },
 //    { { 45, 650, 16, 16 }, false },
-//    { { 621, 650, 16, 16 }, false },
+    { { 621, 650, 16, 16 }, false },
 };
 
 bool checkCollision(SDL_Rect rect)
@@ -461,7 +462,7 @@ bool checkCollision(SDL_Rect rect)
 
 void init()
 {
-    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1100, 900, SDL_WINDOW_SHOWN);
+    pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 900, SDL_WINDOW_SHOWN);
     win_surf = SDL_GetWindowSurface(pWindow);
 
     plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
@@ -495,13 +496,7 @@ void init()
     }
 }
 
-
-void draw()
-{
-    SDL_SetColorKey(plancheSprites, false, 0);
-    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
-
-    // AFFICHAGE "HIGHSCORE"
+void display_highscore_title(){
     SDL_Rect highscorePositions[] = {
         { 720, 30, 25, 25 },  // H
         { 750, 30, 25, 25 },  // I
@@ -527,16 +522,15 @@ void draw()
     for (int i = 0; i < 9; i++) {
         SDL_BlitScaled(plancheSprites, &letters[i], win_surf, &highscorePositions[i]);
     }
-
-    // AFFICHAGE VARIABLE SCORE
+}
+void display_score_title(){
     SDL_Rect scorePositions[] = {
-        { 720, 200, 25, 25 },  // unite
-        { 750, 200, 25, 25 },  // dizaine
-        { 780, 200, 25, 25 },  // centaine
-        { 810, 200, 25, 25 },  // millier
-        { 840, 200, 25, 25 },  // dizaine de millier
+        { 720, 200, 25, 25 },  // S
+        { 750, 200, 25, 25 },  // C
+        { 780, 200, 25, 25 },  // O
+        { 810, 200, 25, 25 },  // R
+        { 840, 200, 25, 25 },  // E
     };
-
     SDL_Rect lettersScore[] = {
         letterS,
         letterC,
@@ -544,12 +538,114 @@ void draw()
         letterR,
         letterE
     };
-
     for (int i = 0; i < 5; i++) {
         SDL_BlitScaled(plancheSprites, &lettersScore[i], win_surf, &scorePositions[i]);
     }
+}
 
+// Affiche le score actuel du joueur
+void display_game_score(){
+    int scoreToDisplay = score;
+    int digit = 0;
+    int x = 820;
+    int y = 250;
+    SDL_Rect numberToDisplay;
+    while (scoreToDisplay > 0) {
+        digit = scoreToDisplay % 10;
+        switch (digit) {
+            case 0:
+                numberToDisplay = number0;
+                break;
+            case 1:
+                numberToDisplay = number1;
+                break;
+            case 2:
+                numberToDisplay = number2;
+                break;
+            case 3:
+                numberToDisplay = number3;
+                break;
+            case 4:
+                numberToDisplay = number4;
+                break;
+            case 5:
+                numberToDisplay = number5;
+                break;
+            case 6:
+                numberToDisplay = number6;
+                break;
+            case 7:
+                numberToDisplay = number7;
+                break;
+            case 8:
+                numberToDisplay = number8;
+                break;
+            case 9:
+                numberToDisplay = number9;
+                break;
+            default:
+                break;
+        }
+        SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &((SDL_Rect){x, y, 25, 25}));
+        scoreToDisplay /= 10;
+        x -= 25;
+    }
+    if (score == 0) {
+        SDL_BlitScaled(plancheSprites, &number0, win_surf, &((SDL_Rect){x, y, 25, 25}));
+    }
+}
+void display_game_highscore(){
+    int highscoreToDisplay = highscore;
+    int digit = 0;
+    int x = 820;
+    int y = 80;
+    SDL_Rect numberToDisplay;
+    while (highscoreToDisplay > 0) {
+        digit = highscoreToDisplay % 10;
+        switch (digit) {
+            case 0:
+                numberToDisplay = number0;
+                break;
+            case 1:
+                numberToDisplay = number1;
+                break;
+            case 2:
+                numberToDisplay = number2;
+                break;
+            case 3:
+                numberToDisplay = number3;
+                break;
+            case 4:
+                numberToDisplay = number4;
+                break;
+            case 5:
+                numberToDisplay = number5;
+                break;
+            case 6:
+                numberToDisplay = number6;
+                break;
+            case 7:
+                numberToDisplay = number7;
+                break;
+            case 8:
+                numberToDisplay = number8;
+                break;
+            case 9:
+                numberToDisplay = number9;
+                break;
+            default:
+                break;
+        }
+        SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &((SDL_Rect){x, y, 25, 25}));
+        highscoreToDisplay /= 10;
+        x -= 25;
+    }
+    if (highscore == 0) {
+        SDL_BlitScaled(plancheSprites, &number0, win_surf, &((SDL_Rect){x, y, 25, 25}));
+    }
+}
 
+void draw_all_pellets(){
     // Draw the pellet if it hasn't been eaten
     for (int i = 0; i < NUM_PELLETS; i++)
     {
@@ -567,6 +663,22 @@ void draw()
             SDL_BlitScaled(plancheSprites, &bigPellet, win_surf, &bigPellets[i].rect);
         }
     }
+}
+
+
+void draw()
+{
+    SDL_SetColorKey(plancheSprites, false, 0);
+    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
+
+    display_highscore_title();
+    display_score_title();
+    display_game_score();
+    display_game_highscore();
+
+    draw_all_pellets();
+
+
 
     SDL_Rect* ghost_in = NULL;
     switch (count / 128)
@@ -743,6 +855,10 @@ void restartGame()
     isPelletEaten = false;
     bool isBigPelletEaten = false;
     gameWon = false;
+    if (score > highscore) {
+        highscore = score;
+    }
+    score = 0;
     lastDirection = -1; // Reset the last key pressed direction
     pacman = (SDL_Rect){340 - (16 / 2), 650 - (16 / 2), 32, 32}; // Reset Pacman's position
 
