@@ -76,21 +76,24 @@ SDL_Rect tiret = { 84, 53, 7, 7 };
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
+bool gameOver = false;
 bool isWideOpen = false;
+int lifes = 3;
 
 Uint32 lastAnimationChangeTime = 0;
 int animationDelay = 200;
 
 int score = 0;
 int highscore = 0;
+
 int count;
 
-SDL_Rect pacman = { 333 - (16 / 2), 654 - (16 / 2), 32, 32 };
+SDL_Rect pacman = { 325, 646, 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
 
 #define NUM_WALLS 47
 #define NUM_PELLETS 192
-#define NUM_BIG_PELLETS 1
+#define NUM_BIG_PELLETS 4
 
 SDL_Rect walls[NUM_WALLS] = {
    // Sides of the map
@@ -397,78 +400,11 @@ typedef struct {
 
 // Placement des big pellets
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
-
    { { 45, 108, 16, 16 }, false },
    { { 621, 108, 16, 16 }, false },
    { { 45, 650, 16, 16 }, false },
    { { 621, 650, 16, 16 }, false },
 };
-
-bool checkCollision(SDL_Rect rect)
-{
-    // Check if the given rectangle collides with any of the walls
-    for (int i = 0; i < NUM_WALLS; i++)
-    {
-        if (SDL_HasIntersection(&rect, &walls[i]) == SDL_TRUE)
-        {
-            // Collision detected
-            return true;
-        }
-    }
-
-    // Check collision with the pellet
-    for (int i = 0; i < NUM_PELLETS; i++)
-    {
-        if (!pellets[i].eaten && SDL_HasIntersection(&rect, &pellets[i].rect) == SDL_TRUE)
-        {
-            // Pellet has been eaten
-            pellets[i].eaten = true;
-            isPelletEaten = true;
-            score += 10;  // Increase the score by 10
-        }
-    }
-
-// Check collision with the big pellet
-    for (int i = 0; i < NUM_BIG_PELLETS; i++)
-    {
-        if (!bigPellets[i].eaten && SDL_HasIntersection(&rect, &bigPellets[i].rect) == SDL_TRUE)
-        {
-            // Big pellet has been eaten
-            bigPellets[i].eaten = true;
-            isBigPelletEaten = true;
-            score += 50;  // Increase the score by 50
-        }
-    }
-
-    bool allPelletsEaten = true;
-    for (int i = 0; i < NUM_PELLETS; i++)
-    {
-        if (!pellets[i].eaten)
-        {
-            allPelletsEaten = false;
-            break;
-        }
-    }
-
-    bool allBigPelletsEaten = true;
-    for (int i = 0; i < NUM_BIG_PELLETS; i++)
-    {
-        if (!bigPellets[i].eaten)
-        {
-            allBigPelletsEaten = false;
-            break;
-        }
-    }
-
-    // Set gameWon flag if all pellets are eaten
-    if (allPelletsEaten && allBigPelletsEaten)
-    {
-        gameWon = true;
-    }
-
-    // No collision detected
-    return false;
-}
 
 void init()
 {
@@ -506,6 +442,7 @@ void init()
     }
 }
 
+// Afficher les titres
 void display_highscore_title(){
     SDL_Rect highscorePositions[] = {
         { 720, 30, 25, 25 },  // H
@@ -657,6 +594,15 @@ void display_game_highscore(){
     }
 }
 
+void display_lifes(){
+    int x = 720;
+    int y = 400;
+    for (int i = 0; i < lifes; i++) {
+        SDL_BlitScaled(plancheSprites, &pacman_right, win_surf, &((SDL_Rect){x, y, 50, 50}));
+        x += 50;
+    }
+}
+// Afficher les pellets (grand et petits)
 void draw_all_pellets(){
     // Draw the pellet if it hasn't been eaten
     for (int i = 0; i < NUM_PELLETS; i++)
@@ -677,6 +623,98 @@ void draw_all_pellets(){
     }
 }
 
+void respawn(){
+    // animation de mort TODO
+
+    // Reset the position of pacman and the ghost
+    pacman.x = 325;
+    pacman.y = 646;
+    ghost = (SDL_Rect){ 325, 386, 32, 32 };
+
+    lastDirection = SDL_SCANCODE_RIGHT;
+    SDL_BlitScaled(plancheSprites, &pacman_right, win_surf, &pacman);
+    
+    SDL_Delay(1000);
+}
+
+bool checkCollision(SDL_Rect rect)
+{
+    // Check if the given rectangle collides with any of the walls
+    for (int i = 0; i < NUM_WALLS; i++)
+    {
+        if (SDL_HasIntersection(&rect, &walls[i]) == SDL_TRUE)
+        {
+            // Collision detected
+            return true;
+        }
+    }
+
+    // Check collision with the pellet
+    for (int i = 0; i < NUM_PELLETS; i++)
+    {
+        if (!pellets[i].eaten && SDL_HasIntersection(&rect, &pellets[i].rect) == SDL_TRUE)
+        {
+            // Pellet has been eaten
+            pellets[i].eaten = true;
+            isPelletEaten = true;
+            score += 10;  // Increase the score by 10
+        }
+    }
+
+    // Check collision with the big pellet
+    for (int i = 0; i < NUM_BIG_PELLETS; i++)
+    {
+        if (!bigPellets[i].eaten && SDL_HasIntersection(&rect, &bigPellets[i].rect) == SDL_TRUE)
+        {
+            // Big pellet has been eaten
+            bigPellets[i].eaten = true;
+            isBigPelletEaten = true;
+            score += 50;  // Increase the score by 50
+        }
+    }
+
+    // Check collision with the red ghost
+    if (SDL_HasIntersection(&rect, &ghost) == SDL_TRUE)
+    {
+        lifes--;
+        // Collision detected
+        if (lifes == 0) {
+            gameOver = true;
+        }
+        else {
+            respawn();
+        }
+    }
+
+    bool allPelletsEaten = true;
+    for (int i = 0; i < NUM_PELLETS; i++)
+    {
+        if (!pellets[i].eaten)
+        {
+            allPelletsEaten = false;
+            break;
+        }
+    }
+
+    bool allBigPelletsEaten = true;
+    for (int i = 0; i < NUM_BIG_PELLETS; i++)
+    {
+        if (!bigPellets[i].eaten)
+        {
+            allBigPelletsEaten = false;
+            break;
+        }
+    }
+
+    // Set gameWon flag if all pellets are eaten
+    if (allPelletsEaten && allBigPelletsEaten)
+    {
+        gameWon = true;
+    }
+
+    // No collision detected
+    return false;
+}
 
 void draw()
 {
@@ -690,7 +728,7 @@ void draw()
 
     draw_all_pellets();
 
-
+    display_lifes();
 
     SDL_Rect* ghost_in = NULL;
     switch (count / 128)
@@ -806,7 +844,6 @@ else
         pacman = nextPosition;
     }
 
-
     // Check if pacman enter tunnel, teleport him to the other side
     if (pacman.x < 10)
     {
@@ -912,7 +949,7 @@ void restartGame()
     }
     score = 0;
     lastDirection = -1; // Reset the last key pressed direction
-    pacman = (SDL_Rect){340 - (16 / 2), 650 - (16 / 2), 32, 32}; // Reset Pacman's position
+    pacman = (SDL_Rect){332, 642, 32, 32}; // Reset Pacman's position
 
     // Reset the eaten state of all pellets
     for (int i = 0; i < NUM_PELLETS; i++)
