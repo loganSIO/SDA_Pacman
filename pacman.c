@@ -25,7 +25,10 @@ SDL_Rect pacman_left = { 46, 90, 16, 16 };
 SDL_Rect pacman_up = { 75, 90, 16, 16 };
 SDL_Rect pacman_down = { 109, 90, 16, 16 };
 
+SDL_Rect bigPellet = { 9, 79, 8, 8 };
+
 bool isPelletEaten = false;
+bool isBigPelletEaten = false;
 bool gameWon = false;
 
 int count;
@@ -35,6 +38,7 @@ int lastDirection = -1; // Store the last key pressed direction
 
 #define NUM_WALLS 47
 #define NUM_PELLETS 1
+#define NUM_BIG_PELLETS 1
 
 SDL_Rect walls[NUM_WALLS] = {
    // Sides of the map
@@ -334,6 +338,19 @@ Pellet pellets[NUM_PELLETS] = {
 
 };
 
+typedef struct {
+   SDL_Rect rect;
+   bool eaten;
+} BigPellet;
+
+// Placement des big pellets
+BigPellet bigPellets[NUM_BIG_PELLETS] = {
+   { { 45, 108, 16, 16 }, false },
+//    { { 621, 108, 16, 16 }, false },
+//    { { 45, 650, 16, 16 }, false },
+//    { { 621, 650, 16, 16 }, false },
+};
+
 bool checkCollision(SDL_Rect rect)
 {
     // Check if the given rectangle collides with any of the walls
@@ -357,6 +374,17 @@ bool checkCollision(SDL_Rect rect)
         }
     }
 
+// Check collision with the big pellet
+    for (int i = 0; i < NUM_BIG_PELLETS; i++)
+    {
+        if (!bigPellets[i].eaten && SDL_HasIntersection(&rect, &bigPellets[i].rect) == SDL_TRUE)
+        {
+            // Big pellet has been eaten
+            bigPellets[i].eaten = true;
+            isBigPelletEaten = true;
+        }
+    }
+
     bool allPelletsEaten = true;
     for (int i = 0; i < NUM_PELLETS; i++)
     {
@@ -367,8 +395,18 @@ bool checkCollision(SDL_Rect rect)
         }
     }
 
+    bool allBigPelletsEaten = true;
+    for (int i = 0; i < NUM_BIG_PELLETS; i++)
+    {
+        if (!bigPellets[i].eaten)
+        {
+            allBigPelletsEaten = false;
+            break;
+        }
+    }
+
     // Set gameWon flag if all pellets are eaten
-    if (allPelletsEaten)
+    if (allPelletsEaten && allBigPelletsEaten)
     {
         gameWon = true;
     }
@@ -424,6 +462,15 @@ void draw()
         if (!pellets[i].eaten)
         {
             SDL_FillRect(win_surf, &pellets[i].rect, SDL_MapRGB(win_surf->format, 252, 188, 176));
+        }
+    }
+
+    // Draw the big pellet if it hasn't been eaten
+    for (int i = 0; i < NUM_BIG_PELLETS; i++)
+    {
+        if (!bigPellets[i].eaten)
+        {
+            SDL_BlitScaled(plancheSprites, &bigPellet, win_surf, &bigPellets[i].rect);
         }
     }
 
