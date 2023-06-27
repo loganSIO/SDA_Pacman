@@ -16,12 +16,31 @@ TTF_Font* font = NULL;
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
 
-// Ghosts
-SDL_Rect ghost_r = { 3, 123, 16, 16 };
-SDL_Rect ghost_l = { 37, 123, 16, 16 };
-SDL_Rect ghost_d = { 105, 123, 16, 16 };
-SDL_Rect ghost_u = { 71, 123, 16, 16 };
-SDL_Rect ghost = { 34, 34, 32, 32 };
+SDL_Rect ghost_red_r = { 3, 123, 16, 16 };
+SDL_Rect ghost_red_l = { 37, 123, 16, 16 };
+SDL_Rect ghost_red_d = { 105, 123, 16, 16 };
+SDL_Rect ghost_red_u = { 71, 123, 16, 16 };
+SDL_Rect ghost_red = { 325, 325, 32, 32 };
+
+SDL_Rect ghost_pink_r = { 3, 141, 16, 16 };
+SDL_Rect ghost_pink_l = { 37, 141, 16, 16 };
+SDL_Rect ghost_pink_d = { 105, 141, 16, 16 };
+SDL_Rect ghost_pink_u = { 71, 141, 16, 16 };
+SDL_Rect ghost_pink = { 325, 400, 32, 32 };
+
+
+SDL_Rect ghost_cyan_r = { 3, 159, 16, 16 };
+SDL_Rect ghost_cyan_l = { 37, 159, 16, 16 };
+SDL_Rect ghost_cyan_d = { 105, 159, 16, 16 };
+SDL_Rect ghost_cyan_u = { 71, 159, 16, 16 };
+SDL_Rect ghost_cyan = { 325, 425, 32, 32 };
+
+SDL_Rect ghost_orange_r = { 3, 177, 16, 16 };
+SDL_Rect ghost_orange_l = { 37, 177, 16, 16 };
+SDL_Rect ghost_orange_d = { 105, 177, 16, 16 };
+SDL_Rect ghost_orange_u = { 71, 177, 16, 16 };
+SDL_Rect ghost_orange = { 325, 380, 32, 32 };
+
 
 // Pacman
 SDL_Rect pacman_closed = { 3, 90, 16, 16 };
@@ -94,10 +113,19 @@ bool gameWon = false;
 bool gameOver = false;
 bool isWideOpen = false;
 
+int count_red;
+int count_pink;
+int count_cyan;
+int count_orange;
+
+int direction_red = 0; // Initial direction (0: left)
+int direction_pink = 1; // Initial direction (1: up)
+int direction_cyan = 1; // Initial direction (1: up)
+int direction_orange = 1; // Initial direction (1: up)
+
 Uint32 lastAnimationChangeTime = 0;
 int animationDelay = 200;
-int lastDirection = -1; 
-int count;
+int lastDirection = -1;
 
 #define NUM_WALLS 47
 #define NUM_PELLETS 1
@@ -509,14 +537,28 @@ void respawn(){
     // animation de mort TODO
 
     // Reset the position of pacman and the ghost
-    ghost = (SDL_Rect){ 325, 386, 32, 32 };
+    ghost_red = (SDL_Rect){ 325, 325, 32, 32 };
+    ghost_pink = (SDL_Rect){ 325, 400, 32, 32 };
+    ghost_cyan = (SDL_Rect){ 325, 425, 32, 32 };
+    ghost_orange = (SDL_Rect){ 325, 400, 32, 32 };
+
     pacman = (SDL_Rect){ 325, 646, 32, 32 }; // Reset Pacman's position (idk why ça marche pas ici)
 
-    lastDirection = SDL_SCANCODE_RIGHT;
+    direction_red = 0;
+    direction_pink = 1;
+    direction_cyan = 1;
+    direction_orange = 1;
+
     SDL_Delay(1000);
 }
-void CheckCollisionWithGhost(SDL_Rect pacman){
-    if (SDL_HasIntersection(&pacman, &ghost) == SDL_TRUE) {
+
+void CheckCollisionWithGhost(SDL_Rect pacman) {
+    // Check collision with each ghost individually
+    if (SDL_HasIntersection(&pacman, &ghost_red) == SDL_TRUE ||
+        SDL_HasIntersection(&pacman, &ghost_pink) == SDL_TRUE ||
+        SDL_HasIntersection(&pacman, &ghost_cyan) == SDL_TRUE ||
+        SDL_HasIntersection(&pacman, &ghost_orange) == SDL_TRUE) {
+
         lifes--;
         if (lifes == 0) {
             gameOver = true;
@@ -527,18 +569,24 @@ void CheckCollisionWithGhost(SDL_Rect pacman){
     }
 }
 
-bool checkCollision(SDL_Rect rect)
+bool checkWallCollision(SDL_Rect rect)
 {
     // Check if the given rectangle collides with any of the walls
     for (int i = 0; i < NUM_WALLS; i++)
     {
         if (SDL_HasIntersection(&rect, &walls[i]) == SDL_TRUE)
         {
-            // Collision detected
+            // Collision detected with wall
             return true;
         }
     }
 
+    // No collision with walls detected
+    return false;
+}
+
+bool checkPelletCollision(SDL_Rect rect)
+{
     // Check collision with the pellet
     for (int i = 0; i < NUM_PELLETS; i++)
     {
@@ -590,8 +638,17 @@ bool checkCollision(SDL_Rect rect)
         gameWon = true;
     }
 
-    // No collision detected
+    // No collision with pellets detected
     return false;
+}
+
+bool checkCollision(SDL_Rect rect)
+{
+    bool wallCollision = checkWallCollision(rect);
+    bool pelletCollision = checkPelletCollision(rect);
+
+    // Collision detected if there is a wall or pellet collision
+    return wallCollision || pelletCollision;
 }
 
 void init()
@@ -600,7 +657,6 @@ void init()
     win_surf = SDL_GetWindowSurface(pWindow);
 
     plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
-    count = 0;
 
       // Get the path of the current source file
     char currentPath[FILENAME_MAX];
@@ -621,6 +677,84 @@ void init()
     }
 }
 
+void moveGhosts()
+{
+    struct GhostData
+    {
+        SDL_Rect* position;
+        int* direction;
+        SDL_Rect* sprites[4];
+        int* count;
+    };
+
+    struct GhostData ghostsData[] = {
+        { &ghost_red, &direction_red, { &ghost_red_l, &ghost_red_u, &ghost_red_r, &ghost_red_d }, &count_red },
+        { &ghost_pink, &direction_pink, { &ghost_pink_l, &ghost_pink_u, &ghost_pink_r, &ghost_pink_d }, &count_pink },
+        { &ghost_cyan, &direction_cyan, { &ghost_cyan_l, &ghost_cyan_u, &ghost_cyan_r, &ghost_cyan_d }, &count_cyan },
+        { &ghost_orange, &direction_orange, { &ghost_orange_l, &ghost_orange_u, &ghost_orange_r, &ghost_orange_d }, &count_orange }
+    };
+
+    for (int i = 0; i < sizeof(ghostsData) / sizeof(ghostsData[0]); i++)
+    {
+        struct GhostData* ghostData = &ghostsData[i];
+        SDL_Rect* ghostPosition = ghostData->position;
+        int* ghostDirection = ghostData->direction;
+        SDL_Rect** ghostSprites = ghostData->sprites;
+        int* ghostCount = ghostData->count;
+
+        int prevX = ghostPosition->x;
+        int prevY = ghostPosition->y;
+        int prevDirection = *ghostDirection;
+
+        // Update the ghost's position based on the current direction
+        switch (*ghostDirection)
+        {
+        case 0: // Move left
+            ghostPosition->x--;
+            break;
+        case 1: // Move up
+            ghostPosition->y--;
+            break;
+        case 2: // Move right
+            ghostPosition->x++;
+            break;
+        case 3: // Move down
+            ghostPosition->y++;
+            break;
+        }
+
+        // Check for wall collision
+        if (checkWallCollision(*ghostPosition))
+        {
+            // Revert the ghost's movement
+            ghostPosition->x = prevX;
+            ghostPosition->y = prevY;
+
+            // Generate a random valid direction
+            int newDirection;
+            do
+            {
+                newDirection = rand() % 4;
+            } while (newDirection == prevDirection || newDirection == (prevDirection + 2) % 4);
+
+            // Update the direction
+            *ghostDirection = newDirection;
+        }
+
+        // Update the count for animation
+        *ghostCount = (*ghostCount + 1) % 512;
+
+        // Determine the sprite direction based on the current direction
+        SDL_Rect* currentSprite = ghostSprites[*ghostDirection];
+        SDL_Rect ghostInSprite = *currentSprite;
+        if ((*ghostCount / 4) % 2)
+            ghostInSprite.x += 17;
+
+        SDL_SetColorKey(plancheSprites, true, 0);
+        SDL_BlitScaled(plancheSprites, &ghostInSprite, win_surf, ghostPosition);
+    }
+}
+
 void draw()
 {
     SDL_SetColorKey(plancheSprites, false, 0);
@@ -634,96 +768,80 @@ void draw()
 
     draw_all_pellets();
 
+        // Check collision with ghost and update lifes
+    CheckCollisionWithGhost(pacman);
+    moveGhosts();
 
-
-    SDL_Rect* ghost_in = NULL;
-    switch (count / 128)
+    // Check if pacman enter tunnel, teleport him to the other side
+    if (pacman.x < 10)
     {
-    case 0:
-        ghost_in = &ghost_r;
-        ghost.x++;
-        break;
-    case 1:
-        ghost_in = &ghost_d;
-        ghost.y++;
-        break;
-    case 2:
-        ghost_in = &ghost_l;
-        ghost.x--;
-        break;
-    case 3:
-        ghost_in = &ghost_u;
-        ghost.y--;
-        break;
+        pacman.x = 645;
     }
-    count = (count + 1) % 512;
-
-    SDL_Rect ghost_in2 = *ghost_in;
-    if ((count / 4) % 2)
-        ghost_in2.x += 17;
-
-    SDL_SetColorKey(plancheSprites, true, 0);
-    SDL_BlitScaled(plancheSprites, &ghost_in2, win_surf, &ghost);
-
-Uint32 currentTime = SDL_GetTicks();
-if (currentTime - lastAnimationChangeTime >= animationDelay)
-{
-    // Toggle the animation state between wide open and normal
-    isWideOpen = !isWideOpen;
-    lastAnimationChangeTime = currentTime; // Update the last animation change time
-}
-
-// Determine the appropriate sprite based on the animation state and direction
-SDL_Rect pacman_direction;
-if (lastDirection == SDL_SCANCODE_LEFT)
-{
-    if (isWideOpen)
+    else if (pacman.x > 645)
     {
-        pacman_direction = pacman_wide_left;
+        pacman.x = 10;
+    }
+
+
+    Uint32 currentTime = SDL_GetTicks();
+    if (currentTime - lastAnimationChangeTime >= animationDelay)
+    {
+        // Toggle the animation state between wide open and normal
+        isWideOpen = !isWideOpen;
+        lastAnimationChangeTime = currentTime; // Update the last animation change time
+    }
+
+    // Determine the appropriate sprite based on the animation state and direction
+    SDL_Rect pacman_direction;
+    if (lastDirection == SDL_SCANCODE_LEFT)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_left;
+        }
+        else
+        {
+            pacman_direction = pacman_left;
+        }
+    }
+    else if (lastDirection == SDL_SCANCODE_RIGHT)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_right;
+        }
+        else
+        {
+            pacman_direction = pacman_right;
+        }
+    }
+    else if (lastDirection == SDL_SCANCODE_UP)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_up;
+        }
+        else
+        {
+            pacman_direction = pacman_up;
+        }
+    }
+    else if (lastDirection == SDL_SCANCODE_DOWN)
+    {
+        if (isWideOpen)
+        {
+            pacman_direction = pacman_wide_down;
+        }
+        else
+        {
+            pacman_direction = pacman_down;
+        }
     }
     else
     {
-        pacman_direction = pacman_left;
+        pacman_direction = pacman_closed;
+        isWideOpen = false;  // Reset animation state when not moving left
     }
-}
-else if (lastDirection == SDL_SCANCODE_RIGHT)
-{
-    if (isWideOpen)
-    {
-        pacman_direction = pacman_wide_right;
-    }
-    else
-    {
-        pacman_direction = pacman_right;
-    }
-}
-else if (lastDirection == SDL_SCANCODE_UP)
-{
-    if (isWideOpen)
-    {
-        pacman_direction = pacman_wide_up;
-    }
-    else
-    {
-        pacman_direction = pacman_up;
-    }
-}
-else if (lastDirection == SDL_SCANCODE_DOWN)
-{
-    if (isWideOpen)
-    {
-        pacman_direction = pacman_wide_down;
-    }
-    else
-    {
-        pacman_direction = pacman_down;
-    }
-}
-else
-{
-    pacman_direction = pacman_closed;
-    isWideOpen = false;  // Reset animation state when not moving left
-}
 
     SDL_Rect nextPosition = pacman;
     switch (lastDirection)
@@ -750,18 +868,6 @@ else
         pacman = nextPosition;
     }
 
-    // Check collision with ghost and update lifes
-    CheckCollisionWithGhost(pacman);
-
-    // Check if pacman enter tunnel, teleport him to the other side
-    if (pacman.x < 10)
-    {
-        pacman.x = 645;
-    }
-    else if (pacman.x > 645)
-    {
-        pacman.x = 10;
-    }
 }
 
 void drawEndMenu(SDL_Surface* surface, bool isWinMenu) {
