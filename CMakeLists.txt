@@ -9,7 +9,7 @@ set(SDL2_TTF_INCLUDE_DIRS "/usr/include/SDL2")
 set(SDL2_TTF_LIBRARIES "/usr/lib/x86_64-linux-gnu/libSDL2_ttf.so")
 
 add_executable(${PROJECT_NAME} "")
-target_sources(${PROJECT_NAME} PRIVATE pacman.c)
+target_sources(${PROJECT_NAME} PRIVATE main.c game.c utils.c graphics.c)
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "SDL_MAIN_HANDLED")
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} ${SDL2_TTF_LIBRARIES})
