@@ -463,7 +463,6 @@ void display_game_highscore() {
     int x = 820;
     int y = 80;
     SDL_Rect number[10] = {number0, number1, number2, number3, number4, number5, number6, number7, number8, number9};
-
     while (highscoreToDisplay > 0) {
         int digit = highscoreToDisplay % 10;
         SDL_Rect numberToDisplay = number[digit];
@@ -472,21 +471,20 @@ void display_game_highscore() {
         highscoreToDisplay /= 10;
         x -= 25;
     }
-
     if (highscore == 0) {
         SDL_BlitScaled(plancheSprites, &number0, win_surf, &(SDL_Rect){x, y, 25, 25});
     }
 }
 
 // Display lifes remaining
-void display_lifes(){
-    int x = 720;
-    int y = 400;
-    for (int i = 0; i < lifes; i++) {
-        SDL_BlitScaled(plancheSprites, &pacman_right, win_surf, &((SDL_Rect){x, y, 50, 50}));
-        x += 50;
+void display_lifes(int pacman_lifes_count){
+    SDL_Rect pacmanLifePos = { 720, 400, 50, 50 };
+    for (int i = 0; i < pacman_lifes_count; i++) {
+        SDL_BlitScaled(plancheSprites, &pacman_right, win_surf, &pacmanLifePos);
+        pacmanLifePos.x += 50;
     }
 }
+
 // Afficher les pellets (grand et petits)
 void draw_all_pellets(){
     // Draw the pellet if it hasn't been eaten
@@ -516,6 +514,17 @@ void respawn(){
 
     lastDirection = SDL_SCANCODE_RIGHT;
     SDL_Delay(1000);
+}
+void CheckCollisionWithGhost(SDL_Rect pacman){
+    if (SDL_HasIntersection(&pacman, &ghost) == SDL_TRUE) {
+        lifes--;
+        if (lifes == 0) {
+            gameOver = true;
+        }
+        else {
+            respawn();
+        }
+    }
 }
 
 bool checkCollision(SDL_Rect rect)
@@ -554,18 +563,6 @@ bool checkCollision(SDL_Rect rect)
         }
     }
 
-    // Check collision with the red ghost
-    if (SDL_HasIntersection(&rect, &ghost) == SDL_TRUE)
-    {
-        lifes--;
-        // Collision detected
-        if (lifes == 0) {
-            gameOver = true;
-        }
-        else {
-            respawn();
-        }
-    }
 
     bool allPelletsEaten = true;
     for (int i = 0; i < NUM_PELLETS; i++)
@@ -633,10 +630,11 @@ void draw()
     display_score_title();
     display_game_score();
     display_game_highscore();
+    display_lifes(lifes);
 
     draw_all_pellets();
 
-    display_lifes();
+
 
     SDL_Rect* ghost_in = NULL;
     switch (count / 128)
@@ -751,6 +749,9 @@ else
     {
         pacman = nextPosition;
     }
+
+    // Check collision with ghost and update lifes
+    CheckCollisionWithGhost(pacman);
 
     // Check if pacman enter tunnel, teleport him to the other side
     if (pacman.x < 10)
@@ -957,12 +958,6 @@ int main(int argc, char* argv[])
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         fprintf(stderr, "SDL initialization failed: %s", SDL_GetError());
-        return 1;
-    }
-
-    if (TTF_Init() != 0)
-    {
-        fprintf(stderr, "TTF initialization failed: %s", TTF_GetError());
         return 1;
     }
 
