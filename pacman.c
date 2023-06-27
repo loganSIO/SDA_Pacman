@@ -50,6 +50,19 @@ SDL_Rect pacman_wide_left = { 63, 88, 12, 16 };
 SDL_Rect pacman_wide_up = { 93, 90, 16, 16 };
 SDL_Rect pacman_wide_down = { 126, 90, 16, 16 };
 
+// Pacman death
+SDL_Rect pacman_death1 = { 3, 105, 16, 14 };
+SDL_Rect pacman_death2 = { 24, 105, 16, 14 };
+SDL_Rect pacman_death3 = { 42, 105, 16, 14 };
+SDL_Rect pacman_death4 = { 61, 105, 16, 14 };
+SDL_Rect pacman_death5 = { 80, 105, 16, 14 };
+SDL_Rect pacman_death6 = { 99, 105, 14, 14 };
+SDL_Rect pacman_death7 = { 116, 105, 10, 14 };
+SDL_Rect pacman_death8 = { 129, 105, 6, 14 };
+SDL_Rect pacman_death9 = { 137, 105, 4, 14 };
+SDL_Rect pacman_death10 = { 143, 105, 11, 14 };
+
+
 // Super pacgum
 SDL_Rect bigPellet = { 9, 79, 8, 8 };
 
@@ -552,6 +565,28 @@ void respawn(){
     SDL_Delay(1000);
 }
 
+// Animate pacman death
+void animatePacmanDeath(SDL_Surface* win_surf, SDL_Surface* plancheSprites, int numFrames, SDL_Rect PacmanPos, Uint32 animationDelay) {
+    Uint32 lastAnimationChangeTime = SDL_GetTicks();
+    int currentFrame = 0;
+
+    // Sprites into table
+    SDL_Rect pacmanDeath[10] = { pacman_death1, pacman_death2, pacman_death3, pacman_death4, pacman_death5, pacman_death6, pacman_death7, pacman_death8, pacman_death9, pacman_death10};
+
+    while (currentFrame < numFrames) {
+        Uint32 currentTime = SDL_GetTicks();
+
+        if (currentTime - lastAnimationChangeTime >= animationDelay) {
+            lastAnimationChangeTime = currentTime;
+            currentFrame++;
+            
+            SDL_FillRect(win_surf, &PacmanPos, SDL_MapRGB(win_surf->format, 0, 0, 0));
+            SDL_BlitScaled(plancheSprites, &pacmanDeath[currentFrame], win_surf, &PacmanPos);
+            SDL_UpdateWindowSurface(pWindow);
+        }
+    }
+}
+
 void CheckCollisionWithGhost(SDL_Rect pacman) {
     // Check collision with each ghost individually
     if (SDL_HasIntersection(&pacman, &ghost_red) == SDL_TRUE ||
@@ -564,6 +599,7 @@ void CheckCollisionWithGhost(SDL_Rect pacman) {
             gameLost = true;
         }
         else {
+            animatePacmanDeath(win_surf, plancheSprites, 10, pacman, 120);
             respawn();
         }
     }
