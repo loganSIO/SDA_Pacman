@@ -886,7 +886,7 @@ void drawStartMenu(SDL_Surface* surface) {
 
     // Afficher les choix "Play -P" et "Quit -Q"
     SDL_Rect playPos = { surface->w / 2 - ((30*7)/2), surface->h / 2 - 50, 25, 25 };
-    SDL_Rect playLetters[7] = { letters[15], letters[4], letters[11], letters[24], espace, tiret, letters[15] };
+    SDL_Rect playLetters[7] = { letters[15], letters[11], letters[0], letters[24], espace, tiret, letters[15] };
     for (int i = 0; i < 7; i++) {
         SDL_BlitScaled(plancheSprites, &playLetters[i], surface, &playPos);
         playPos.x += 30;
