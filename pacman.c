@@ -12,6 +12,7 @@ SDL_Surface* plancheSprites = NULL;
 // Background
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
+SDL_Rect welcome_title = { 4, 4, 180, 46 };
 
 // Ghosts
 SDL_Rect ghost_red_r = { 3, 123, 16, 16 };
@@ -436,10 +437,10 @@ typedef struct {
 
 // Super pacgum placement
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
-   { { 45, 108, 16, 16 }, false },
-   { { 621, 108, 16, 16 }, false },
-   { { 45, 650, 16, 16 }, false },
-   { { 621, 650, 16, 16 }, false },
+   { { 45, 108, 27, 27 }, false },
+   { { 621, 108, 27, 27 }, false },
+   { { 45, 650, 27, 27 }, false },
+   { { 621, 650, 27, 27 }, false },
 };
 
 // DIsplay titles
@@ -650,6 +651,7 @@ bool checkCollision(SDL_Rect rect)
     return wallCollision || pelletCollision;
 }
 
+// Initialize SDL
 void init()
 {
     pWindow = SDL_CreateWindow("PacMan", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 900, SDL_WINDOW_SHOWN);
@@ -675,6 +677,7 @@ void init()
         // Handle the error accordingly
     }
 }
+
 // Ghosts movement
 void moveGhosts()
 {
@@ -869,6 +872,46 @@ void draw()
 
 }
 
+// Draw the start menu
+void drawStartMenu(SDL_Surface* surface) {
+
+    // Remplir la surface avec une couleur de fond noire
+    SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+
+    // Afficher le sprite welcome_title au centre en haut
+    SDL_Rect welcomeTitlePos = { surface->w / 2 - 270, surface->h / 2 - 300, 540, 138 };
+    SDL_BlitScaled(plancheSprites, &welcome_title, surface, &welcomeTitlePos);
+
+
+    // Afficher les choix "Play -P" et "Quit -Q"
+    SDL_Rect playPos = { surface->w / 2 - ((30*7)/2), surface->h / 2 - 50, 25, 25 };
+    SDL_Rect playLetters[7] = { letterP, letterL, letterA, letterY, espace, tiret, letterP };
+    for (int i = 0; i < 7; i++) {
+        SDL_BlitScaled(plancheSprites, &playLetters[i], surface, &playPos);
+        playPos.x += 30;
+    }
+
+    SDL_Rect quitPos = { surface->w / 2 - ((30*7)/2), surface->h / 2 - 0, 25, 25 };
+    SDL_Rect quitLetters[7] = { letterQ, letterU, letterI, letterT, espace, tiret, letterQ };
+    for (int i = 0; i < 7; i++) {
+        SDL_BlitScaled(plancheSprites, &quitLetters[i], surface, &quitPos);
+        quitPos.x += 30;
+    }
+
+    // Display all 4 ghosts sprites at the bottom of the screen
+    SDL_Rect ghost_red_pos = { surface->w / 2 - 160, surface->h / 2 + 100, 32, 32 };
+    SDL_BlitScaled(plancheSprites, &ghost_red_l, surface, &ghost_red_pos);
+
+    SDL_Rect ghost_pink_pos = { surface->w / 2 - 60, surface->h / 2 + 100, 32, 32 };
+    SDL_BlitScaled(plancheSprites, &ghost_pink_l, surface, &ghost_pink_pos);
+
+    SDL_Rect ghost_cyan_pos = { surface->w / 2 + 40, surface->h / 2 + 100, 32, 32 };
+    SDL_BlitScaled(plancheSprites, &ghost_cyan_l, surface, &ghost_cyan_pos);
+
+    SDL_Rect ghost_orange_pos = { surface->w / 2 + 140, surface->h / 2 + 100, 32, 32 };
+    SDL_BlitScaled(plancheSprites, &ghost_orange_l, surface, &ghost_orange_pos);
+}
+// Draw the end menu
 void drawEndMenu(SDL_Surface* surface, bool gameLost) {
     // Remplir la surface avec une couleur de fond noire
     SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
@@ -890,7 +933,7 @@ void drawEndMenu(SDL_Surface* surface, bool gameLost) {
         }
     }
 
-    // Afficher les choix "Try again - T" et "Quit - Q"
+    // Afficher les choix "Try again - T", Return to menu - R" et "Quit - Q"
     SDL_Rect tryAgainPos = { surface->w / 2 - 170, surface->h / 2 - 50, 25, 25 };
     SDL_Rect tryAgainLetters[12] = { letterT, letterR, letterY, espace, letterA, letterG, letterA, letterI, letterN, espace, tiret, letterT};
     for (int i = 0; i < 12; i++) {
@@ -898,7 +941,14 @@ void drawEndMenu(SDL_Surface* surface, bool gameLost) {
         tryAgainPos.x += 30;
     }
 
-    SDL_Rect quitPos = { surface->w / 2 - 100, surface->h / 2 - 0, 25, 25 };
+    SDL_Rect returnToMenuPos = { surface->w / 2 - 245, surface->h / 2 - 0, 25, 25 };
+    SDL_Rect returnToMenuLetters[18] = { letterR, letterE, letterT, letterU, letterR, letterN, espace, letterT, letterO, espace, letterM, letterE, letterN, letterU, espace, tiret, letterR, };
+    for (int i = 0; i < 18; i++) {
+        SDL_BlitScaled(plancheSprites, &returnToMenuLetters[i], surface, &returnToMenuPos);
+        returnToMenuPos.x += 30;
+    }
+
+    SDL_Rect quitPos = { surface->w / 2 - 100, surface->h / 2 + 50, 25, 25 };
     SDL_Rect quitLetters[7] = { letterQ, letterU, letterI, letterT, espace, tiret, letterQ };
     for (int i = 0; i < 7; i++) {
         SDL_BlitScaled(plancheSprites, &quitLetters[i], surface, &quitPos);
@@ -975,11 +1025,44 @@ void gameLoop()
 {
     bool quit = false;
     bool restart = false;
-
+    bool startMenu = true;
+    
     while (!quit)
     {
-        SDL_Event event;
+        // Display the start menu
+        while (startMenu)
+        {
+            drawStartMenu(win_surf);
+            SDL_UpdateWindowSurface(pWindow);
 
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+             if (event.type == SDL_QUIT)
+                {
+                    quit = true;
+                    startMenu = false;
+                }
+                else if (event.type == SDL_KEYDOWN)
+                {
+                    if (event.key.keysym.scancode == SDL_SCANCODE_P)
+                    {
+                        startMenu = false;
+                        // black background to erase menu before starting game
+                        SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
+                    }
+                    else if (event.key.keysym.scancode == SDL_SCANCODE_A)
+                    {
+                        quit = true;
+                        startMenu = false;
+                    }
+                }
+            }
+
+        }
+
+        // Game loop
+        SDL_Event event;
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
@@ -1030,15 +1113,11 @@ void gameLoop()
         draw();
         SDL_UpdateWindowSurface(pWindow);
 
-
-
-
+        // Display the end menu if the game is won or lost
         if (gameWon || gameLost) {
 
-            // Draw the win menu
             SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
-            drawEndMenu(win_surf, gameLost);
-
+            drawEndMenu(win_surf, gameLost); //if gameLost = true, display You Lost, if gameLost = false, display You Win
             SDL_UpdateWindowSurface(pWindow);
 
             bool menuActive = true;
@@ -1057,24 +1136,29 @@ void gameLoop()
                         if (menuEvent.key.keysym.scancode == SDL_SCANCODE_T)
                         {
                             SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
-                            restartGame();
+                            restartGame(); // Restart the game
                             menuActive = false;
+                        }
+                        else if (menuEvent.key.keysym.scancode == SDL_SCANCODE_R)
+                        {
+                            menuActive = false;
+                            restartGame(); // Restart the game in case the player will play again after going through the start menu
+                            startMenu = true; // Display the start menu
+
                         }
                         else if (menuEvent.key.keysym.scancode == SDL_SCANCODE_A)
                         {
                             SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
-                            quit = true;
-                            printf("Quitting the game...\n");
                             menuActive = false;
+                            startMenu = true; // Display the start menu
                         }
-
                     }
                 }
             }
         }
+
         SDL_Delay(1); // Delay to control the game loop speed
     }
-        printf("Score: %d\n", score);
 }
 
 int main(int argc, char* argv[])
