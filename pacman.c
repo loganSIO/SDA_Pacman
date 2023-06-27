@@ -16,6 +16,19 @@ typedef struct {
     int count;
 } Ghost;
 
+// Pacgum definition
+typedef struct {
+    SDL_Rect rect;
+    bool eaten;
+} Pellet;
+
+// Super pacgum definition
+typedef struct {
+   SDL_Rect rect;
+   bool eaten;
+} BigPellet;
+
+
 // Window and Surfaces
 SDL_Window* pWindow = NULL;
 SDL_Surface* win_surf = NULL;
@@ -173,12 +186,6 @@ SDL_Rect walls[NUM_WALLS] = {
    { 266, 458, 148, 20 },  // Bottom wall};
 
 };
-
-// Pacgum definition
-typedef struct {
-    SDL_Rect rect;
-    bool eaten;
-} Pellet;
 
 // Pacgum placement
 Pellet pellets[NUM_PELLETS] = {
@@ -394,12 +401,6 @@ Pellet pellets[NUM_PELLETS] = {
     { { 592, 816, 8, 8 }, false },
 
 };
-
-// Super pacgum definition
-typedef struct {
-   SDL_Rect rect;
-   bool eaten;
-} BigPellet;
 
 // Super pacgum placement
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
@@ -754,24 +755,9 @@ void moveGhosts()
     }
 }
 
-void draw()
+void updatePacman()
 {
-    SDL_SetColorKey(plancheSprites, false, 0);
-    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
-
-    display_highscore_title();
-    display_score_title();
-    display_game_score();
-    display_game_highscore();
-    display_lifes(lifes);
-
-    draw_all_pellets();
-
-        // Check collision with ghost and update lifes
-    CheckCollisionWithGhost(pacman);
-    moveGhosts();
-
-    // Check if pacman enter tunnel, teleport him to the other side
+        // Check if pacman enter tunnel, teleport him to the other side
     if (pacman.x < 10)
     {
         pacman.x = 645;
@@ -866,7 +852,25 @@ void draw()
     {
         pacman = nextPosition;
     }
+}
 
+void draw()
+{
+    SDL_SetColorKey(plancheSprites, false, 0);
+    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
+
+    display_highscore_title();
+    display_score_title();
+    display_game_score();
+    display_game_highscore();
+    display_lifes(lifes);
+
+    draw_all_pellets();
+
+        // Check collision with ghost and update lifes
+    CheckCollisionWithGhost(pacman);
+    moveGhosts();
+    updatePacman();
 }
 
 // Draw the start menu
