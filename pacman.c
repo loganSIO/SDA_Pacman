@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <unistd.h>
 #include <libgen.h> // For dirname function
 #include <stdio.h>
@@ -8,14 +7,13 @@
 SDL_Window* pWindow = NULL;
 SDL_Surface* win_surf = NULL;
 SDL_Surface* plancheSprites = NULL;
-TTF_Font* font = NULL;
-
 
 // Sprite definition //
 // Background
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
 
+// Ghosts
 SDL_Rect ghost_red_r = { 3, 123, 16, 16 };
 SDL_Rect ghost_red_l = { 37, 123, 16, 16 };
 SDL_Rect ghost_red_d = { 105, 123, 16, 16 };
@@ -28,7 +26,6 @@ SDL_Rect ghost_pink_d = { 105, 141, 16, 16 };
 SDL_Rect ghost_pink_u = { 71, 141, 16, 16 };
 SDL_Rect ghost_pink = { 325, 400, 32, 32 };
 
-
 SDL_Rect ghost_cyan_r = { 3, 159, 16, 16 };
 SDL_Rect ghost_cyan_l = { 37, 159, 16, 16 };
 SDL_Rect ghost_cyan_d = { 105, 159, 16, 16 };
@@ -40,7 +37,6 @@ SDL_Rect ghost_orange_l = { 37, 177, 16, 16 };
 SDL_Rect ghost_orange_d = { 105, 177, 16, 16 };
 SDL_Rect ghost_orange_u = { 71, 177, 16, 16 };
 SDL_Rect ghost_orange = { 325, 380, 32, 32 };
-
 
 // Pacman
 SDL_Rect pacman_closed = { 3, 90, 16, 16 };
@@ -110,7 +106,7 @@ int highscore = 0;
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
-bool gameOver = false;
+bool gameLost = false;
 bool isWideOpen = false;
 
 int count_red;
@@ -506,6 +502,8 @@ void display_game_highscore() {
 
 // Display lifes remaining
 void display_lifes(int pacman_lifes_count){
+    // set background to black to erase previous lifes
+    SDL_FillRect(win_surf, &(SDL_Rect){720, 400, 150, 50}, SDL_MapRGB(win_surf->format, 0, 0, 0));
     SDL_Rect pacmanLifePos = { 720, 400, 50, 50 };
     for (int i = 0; i < pacman_lifes_count; i++) {
         SDL_BlitScaled(plancheSprites, &pacman_right, win_surf, &pacmanLifePos);
@@ -513,7 +511,7 @@ void display_lifes(int pacman_lifes_count){
     }
 }
 
-// Afficher les pellets (grand et petits)
+// Display all pacgums
 void draw_all_pellets(){
     // Draw the pellet if it hasn't been eaten
     for (int i = 0; i < NUM_PELLETS; i++)
@@ -533,8 +531,8 @@ void draw_all_pellets(){
     }
 }
 
+// Respawn pacman and ghosts
 void respawn(){
-    // animation de mort TODO
 
     // Reset the position of pacman and the ghost
     ghost_red = (SDL_Rect){ 325, 325, 32, 32 };
@@ -542,7 +540,8 @@ void respawn(){
     ghost_cyan = (SDL_Rect){ 325, 425, 32, 32 };
     ghost_orange = (SDL_Rect){ 325, 400, 32, 32 };
 
-    pacman = (SDL_Rect){ 325, 646, 32, 32 }; // Reset Pacman's position (idk why ça marche pas ici)
+    pacman = (SDL_Rect){ 325, 646, 32, 32 }; // Position initiale de Pacman
+    lastDirection = -1;
 
     direction_red = 0;
     direction_pink = 1;
@@ -560,8 +559,8 @@ void CheckCollisionWithGhost(SDL_Rect pacman) {
         SDL_HasIntersection(&pacman, &ghost_orange) == SDL_TRUE) {
 
         lifes--;
-        if (lifes == 0) {
-            gameOver = true;
+        if (lifes < 1) {
+            gameLost = true;
         }
         else {
             respawn();
@@ -676,7 +675,7 @@ void init()
         // Handle the error accordingly
     }
 }
-
+// Ghosts movement
 void moveGhosts()
 {
     struct GhostData
@@ -870,12 +869,12 @@ void draw()
 
 }
 
-void drawEndMenu(SDL_Surface* surface, bool isWinMenu) {
+void drawEndMenu(SDL_Surface* surface, bool gameLost) {
     // Remplir la surface avec une couleur de fond noire
     SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
 
     // Afficher le message "You Win!" ou "You Lost!"
-    if (isWinMenu) {
+    if (!gameLost) {
         SDL_Rect youWinPos = { surface->w / 2 - 120, surface->h / 2 - 200, 25, 25 };
         SDL_Rect youWinLetters[9] = { letterY, letterO, letterU, espace, letterW, letterI, letterN, espace, exclamation };
         for (int i = 0; i < 9; i++) {
@@ -939,14 +938,27 @@ void restartGame()
     // Reset the game state and variables
     isPelletEaten = false;
     bool isBigPelletEaten = false;
-    gameOver = false;
+    gameLost = false;
     gameWon = false;
     if (score > highscore) {
         highscore = score;
     }
     score = 0;
+    lifes = 3;
     lastDirection = -1; // Reset the last key pressed direction
     pacman = (SDL_Rect){332, 642, 32, 32}; // Reset Pacman's position
+    
+    // Reset the ghosts' positions
+    ghost_red = (SDL_Rect){ 325, 325, 32, 32 };
+    ghost_pink = (SDL_Rect){ 325, 400, 32, 32 };
+    ghost_cyan = (SDL_Rect){ 325, 425, 32, 32 };
+    ghost_orange = (SDL_Rect){ 325, 400, 32, 32 };
+
+    // Reset the ghosts' directions
+    direction_red = 0;
+    direction_pink = 1;
+    direction_cyan = 1;
+    direction_orange = 1;
 
     // Reset the eaten state of all pellets
     for (int i = 0; i < NUM_PELLETS; i++)
@@ -1018,11 +1030,15 @@ void gameLoop()
         draw();
         SDL_UpdateWindowSurface(pWindow);
 
-        if (gameWon)
-        {
+
+
+
+        if (gameWon || gameLost) {
+
             // Draw the win menu
             SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
-            drawEndMenu(win_surf, true);
+            drawEndMenu(win_surf, gameLost);
+
             SDL_UpdateWindowSurface(pWindow);
 
             bool menuActive = true;
@@ -1051,12 +1067,13 @@ void gameLoop()
                             printf("Quitting the game...\n");
                             menuActive = false;
                         }
+
                     }
                 }
             }
         }
     }
-    printf("Score: %d\n", score);
+        printf("Score: %d\n", score);
 }
 
 int main(int argc, char* argv[])
