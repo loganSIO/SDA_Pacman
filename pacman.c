@@ -1034,7 +1034,6 @@ void gameLoop()
         {
             drawStartMenu(win_surf);
             SDL_UpdateWindowSurface(pWindow);
-
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
@@ -1050,6 +1049,7 @@ void gameLoop()
                         startMenu = false;
                         // black background to erase menu before starting game
                         SDL_FillRect(win_surf, NULL, SDL_MapRGB(win_surf->format, 0, 0, 0));
+
                     }
                     else if (event.key.keysym.scancode == SDL_SCANCODE_A)
                     {
