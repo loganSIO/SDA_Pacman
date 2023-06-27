@@ -13,29 +13,30 @@ TTF_Font* font = NULL;
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
 
-SDL_Rect ghost_r = { 3, 123, 16, 16 };
-SDL_Rect ghost_l = { 37, 123, 16, 16 };
-SDL_Rect ghost_d = { 105, 123, 16, 16 };
-SDL_Rect ghost_u = { 71, 123, 16, 16 };
-SDL_Rect ghost = { 34, 34, 32, 32 };
-
-SDL_Rect ghost_cyan_r = { 3, 159, 16, 16 };
-SDL_Rect ghost_cyan_l = { 37, 159, 16, 16 };
-SDL_Rect ghost_cyan_d = { 105, 159, 16, 16 };
-SDL_Rect ghost_cyan_u = { 71, 159, 16, 16 };
-SDL_Rect ghost_cyan = { 34, 34, 32, 32 };
+SDL_Rect ghost_red_r = { 3, 123, 16, 16 };
+SDL_Rect ghost_red_l = { 37, 123, 16, 16 };
+SDL_Rect ghost_red_d = { 105, 123, 16, 16 };
+SDL_Rect ghost_red_u = { 71, 123, 16, 16 };
+SDL_Rect ghost_red = { 325, 325, 32, 32 };
 
 SDL_Rect ghost_pink_r = { 3, 141, 16, 16 };
 SDL_Rect ghost_pink_l = { 37, 141, 16, 16 };
 SDL_Rect ghost_pink_d = { 105, 141, 16, 16 };
 SDL_Rect ghost_pink_u = { 71, 141, 16, 16 };
-SDL_Rect ghost_pink = { 320, 400, 32, 32 };
+SDL_Rect ghost_pink = { 325, 400, 32, 32 };
+
+
+SDL_Rect ghost_cyan_r = { 3, 159, 16, 16 };
+SDL_Rect ghost_cyan_l = { 37, 159, 16, 16 };
+SDL_Rect ghost_cyan_d = { 105, 159, 16, 16 };
+SDL_Rect ghost_cyan_u = { 71, 159, 16, 16 };
+SDL_Rect ghost_cyan = { 325, 425, 32, 32 };
 
 SDL_Rect ghost_orange_r = { 3, 177, 16, 16 };
 SDL_Rect ghost_orange_l = { 37, 177, 16, 16 };
 SDL_Rect ghost_orange_d = { 105, 177, 16, 16 };
 SDL_Rect ghost_orange_u = { 71, 177, 16, 16 };
-SDL_Rect ghost_orange = { 34, 34, 32, 32 };
+SDL_Rect ghost_orange = { 325, 425, 32, 32 };
 
 
 SDL_Rect pacman_closed = { 3, 90, 16, 16 };
@@ -97,13 +98,22 @@ bool isBigPelletEaten = false;
 bool gameWon = false;
 bool isWideOpen = false;
 
+int count_red;
+int count_pink;
+int count_cyan;
+int count_orange;
+
+int direction_red = 0; // Initial direction (0: left)
+int direction_pink = 1; // Initial direction (1: up)
+int direction_cyan = 1; // Initial direction (1: up)
+int direction_orange = 1; // Initial direction (1: up)
+
+
 Uint32 lastAnimationChangeTime = 0;
 int animationDelay = 200;
 
 int score = 0;
 int highscore = 0;
-int count;
-int count_pink;
 
 SDL_Rect pacman = { 333 - (16 / 2), 654 - (16 / 2), 32, 32 };
 int lastDirection = -1; // Store the last key pressed direction
@@ -511,7 +521,6 @@ void init()
     win_surf = SDL_GetWindowSurface(pWindow);
 
     plancheSprites = SDL_LoadBMP("./pacman_sprites.bmp");
-    count = 0;
 
       // Get the path of the current source file
     char currentPath[FILENAME_MAX];
@@ -570,6 +579,7 @@ void display_highscore_title(){
         SDL_BlitScaled(plancheSprites, &letters[i], win_surf, &highscorePositions[i]);
     }
 }
+
 void display_score_title(){
     SDL_Rect scorePositions[] = {
         { 720, 200, 25, 25 },  // S
@@ -641,6 +651,7 @@ void display_game_score(){
         SDL_BlitScaled(plancheSprites, &number0, win_surf, &((SDL_Rect){x, y, 25, 25}));
     }
 }
+
 void display_game_highscore(){
     int highscoreToDisplay = highscore;
     int digit = 0;
@@ -714,81 +725,137 @@ void draw_all_pellets(){
 
 void moveGhosts()
 {
-    SDL_Rect* ghost_in = NULL;
-    switch (count / 128)
+    int prev_red_X = ghost_red.x;
+    int prev_red_Y = ghost_red.y;
+    int prev_pink_X = ghost_pink.x;
+    int prev_pink_Y = ghost_pink.y;
+    int prevX_cyan = ghost_cyan.x;
+    int prevY_cyan = ghost_cyan.y;
+    int prevX_orange = ghost_orange.x;
+    int prevY_orange = ghost_orange.y;
+
+    int prevDirection_red = direction_red; // Store the previous direction
+    int prevDirection_pink = direction_pink; // Store the previous direction
+    int prevDirection_cyan = direction_cyan; // Store the previous direction
+    int prevDirection_orange = direction_orange; // Store the previous direction
+
+    // Update the ghost's position based on the current direction
+    switch (direction_red)
     {
-    case 0:
-        ghost_in = &ghost_r;
-        ghost.x++;
+    case 0: // Move left
+        ghost_red.x--;
         break;
-    case 1:
-        ghost_in = &ghost_d;
-        ghost.y++;
+    case 1: // Move up
+        ghost_red.y--;
         break;
-    case 2:
-        ghost_in = &ghost_l;
-        ghost.x--;
+    case 2: // Move right
+        ghost_red.x++;
         break;
-    case 3:
-        ghost_in = &ghost_u;
-        ghost.y--;
+    case 3: // Move down
+        ghost_red.y++;
         break;
     }
-    count = (count + 1) % 512;
 
-    SDL_Rect ghost_in2 = *ghost_in;
-    if ((count / 4) % 2)
-        ghost_in2.x += 17;
+    // Check for wall collision
+    if (checkWallCollision(ghost_red))
+    {
+        // Revert the ghost's movement
+        ghost_red.x = prev_red_X;
+        ghost_red.y = prev_red_Y;
 
-    SDL_SetColorKey(plancheSprites, true, 0);
-    SDL_BlitScaled(plancheSprites, &ghost_in2, win_surf, &ghost);
+        // Generate a random valid direction
+        int newDirection;
+        do
+        {
+            newDirection = rand() % 4;
+        } while (newDirection == prevDirection_red || newDirection == (prevDirection_red + 2) % 4);
 
-    // Spawn point cyan ghost
-    SDL_Rect cyanGhost = { 295, 400, 32, 32 }; // Initial sprite direction
-    SDL_BlitScaled(plancheSprites, &ghost_cyan_u, win_surf, &cyanGhost);
+        // Update the direction
+        direction_red = newDirection;
+    }
 
-    // Spawn point orange ghost
-    SDL_Rect orangeGhost = { 355, 400, 32, 32 }; // Initial sprite direction
-    SDL_BlitScaled(plancheSprites, &ghost_orange_u, win_surf, &orangeGhost);
+    // Update the count for animation
+    count_red = (count_red + 1) % 512;
 
-    SDL_Rect* pinkGhost = NULL; // Initial sprite direction
-    switch (count_pink / 128)
+    // Render the red ghost
+    SDL_Rect* redGhost = NULL;
+    switch (direction_red)
     {
     case 0:
-        pinkGhost = &ghost_pink_u;
-        ghost_pink.y--;
-        if (checkWallCollision(ghost_pink))
-        {
-            ghost_pink.y++;    // Revert the movement
-            count_pink += 128; // Move to the next case in the switch
-        }
+        redGhost = &ghost_red_l;
         break;
     case 1:
-        pinkGhost = &ghost_pink_r;
-        ghost_pink.x++;
-        if (checkWallCollision(ghost_pink))
-        {
-            ghost_pink.x--;    // Revert the movement
-            count_pink += 128; // Move to the next case in the switch
-        }
+        redGhost = &ghost_red_u;
         break;
     case 2:
-        pinkGhost = &ghost_pink_d;
-        ghost_pink.y++;
-        if (checkWallCollision(ghost_pink))
-        {
-            ghost_pink.y--;    // Revert the movement
-            count_pink += 128; // Move to the next case in the switch
-        }
+        redGhost = &ghost_red_r;
         break;
     case 3:
-        pinkGhost = &ghost_pink_l;
+        redGhost = &ghost_red_d;
+        break;
+    }
+
+    SDL_Rect ghost_in_red = *redGhost;
+    if ((count_red / 4) % 2)
+        ghost_in_red.x += 17;
+
+    SDL_SetColorKey(plancheSprites, true, 0);
+    SDL_BlitScaled(plancheSprites, &ghost_in_red, win_surf, &ghost_red);
+
+    // ----------------------------- pink
+
+    switch (direction_pink)
+    {
+    case 0: // Move left
         ghost_pink.x--;
-        if (checkWallCollision(ghost_pink))
+        break;
+    case 1: // Move up
+        ghost_pink.y--;
+        break;
+    case 2: // Move right
+        ghost_pink.x++;
+        break;
+    case 3: // Move down
+        ghost_pink.y++;
+        break;
+    }
+
+    // Check for wall collision
+    if (checkWallCollision(ghost_pink))
+    {
+        // Revert the ghost's movement
+        ghost_pink.x = prev_pink_X;
+        ghost_pink.y = prev_pink_Y;
+
+        // Generate a random valid direction
+        int newDirection;
+        do
         {
-            ghost_pink.x++; // Revert the movement
-            count_pink = 0; // Move back to the first case in the switch
-        }
+            newDirection = rand() % 4;
+        } while (newDirection == prevDirection_pink || newDirection == (prevDirection_pink + 2) % 4);
+
+        // Update the direction
+        direction_pink = newDirection;
+    }
+
+    // Update the count for animation
+    count_pink = (count_pink + 1) % 512;
+
+    // Determine the sprite direction based on the current direction
+    SDL_Rect* pinkGhost = NULL;
+    switch (direction_pink)
+    {
+    case 0: // Left
+        pinkGhost = &ghost_pink_l;
+        break;
+    case 1: // Up
+        pinkGhost = &ghost_pink_u;
+        break;
+    case 2: // Right
+        pinkGhost = &ghost_pink_r;
+        break;
+    case 3: // Down
+        pinkGhost = &ghost_pink_d;
         break;
     }
 
@@ -796,7 +863,137 @@ void moveGhosts()
     if ((count_pink / 4) % 2)
         ghost_in_pink.x += 17;
 
+    SDL_SetColorKey(plancheSprites, true, 0);
     SDL_BlitScaled(plancheSprites, &ghost_in_pink, win_surf, &ghost_pink);
+
+    // ----------- cyan
+
+    switch (direction_cyan)
+    {
+    case 0: // Move left
+        ghost_cyan.x--;
+        break;
+    case 1: // Move up
+        ghost_cyan.y--;
+        break;
+    case 2: // Move right
+        ghost_cyan.x++;
+        break;
+    case 3: // Move down
+        ghost_cyan.y++;
+        break;
+    }
+
+    // Check for wall collision
+    if (checkWallCollision(ghost_cyan))
+    {
+        // Revert the ghost's movement
+        ghost_cyan.x = prevX_cyan;
+        ghost_cyan.y = prevY_cyan;
+
+        // Generate a random valid direction
+        int newDirection_cyan;
+        do
+        {
+            newDirection_cyan = rand() % 4;
+        } while (newDirection_cyan == prevDirection_cyan || newDirection_cyan == (prevDirection_cyan + 2) % 4);
+
+        // Update the direction
+        direction_cyan = newDirection_cyan;
+    }
+
+    // Update the count for animation
+    count_cyan = (count_cyan + 1) % 512;
+
+    // Determine the sprite direction based on the current direction
+    SDL_Rect* cyanGhost = NULL;
+    switch (direction_cyan)
+    {
+    case 0: // Left
+        cyanGhost = &ghost_cyan_l;
+        break;
+    case 1: // Up
+        cyanGhost = &ghost_cyan_u;
+        break;
+    case 2: // Right
+        cyanGhost = &ghost_cyan_r;
+        break;
+    case 3: // Down
+        cyanGhost = &ghost_cyan_d;
+        break;
+    }
+
+    SDL_Rect ghost_in_cyan = *cyanGhost;
+    if ((count_cyan / 4) % 2)
+        ghost_in_cyan.x += 17;
+
+    SDL_SetColorKey(plancheSprites, true, 0);
+    SDL_BlitScaled(plancheSprites, &ghost_in_cyan, win_surf, &ghost_cyan);
+
+    // -------------- orange
+
+    switch (direction_orange)
+    {
+    case 0: // Move left
+        ghost_orange.x--;
+        break;
+    case 1: // Move up
+        ghost_orange.y--;
+        break;
+    case 2: // Move right
+        ghost_orange.x++;
+        break;
+    case 3: // Move down
+        ghost_orange.y++;
+        break;
+    }
+
+    // Check for wall collision
+    if (checkWallCollision(ghost_orange))
+    {
+        // Revert the ghost's movement
+        ghost_orange.x = prevX_orange;
+        ghost_orange.y = prevY_orange;
+
+        // Generate a random valid direction
+        int newDirection_orange;
+        do
+        {
+            newDirection_orange = rand() % 4;
+        } while (newDirection_orange == prevDirection_orange || newDirection_orange == (prevDirection_orange + 2) % 4);
+
+        // Update the direction
+        direction_orange = newDirection_orange;
+    }
+
+    // Update the count for animation
+    count_orange = (count_orange + 1) % 512;
+
+    // Determine the sprite direction based on the current direction
+    SDL_Rect* orangeGhost = NULL;
+    switch (direction_orange)
+    {
+    case 0: // Left
+        orangeGhost = &ghost_orange_l;
+        break;
+    case 1: // Up
+        orangeGhost = &ghost_orange_u;
+        break;
+    case 2: // Right
+        orangeGhost = &ghost_orange_r;
+        break;
+    case 3: // Down
+        orangeGhost = &ghost_orange_d;
+        break;
+    }
+
+    SDL_Rect ghost_in_orange = *orangeGhost;
+    if ((count_orange / 4) % 2)
+        ghost_in_orange.x += 17;
+
+    SDL_SetColorKey(plancheSprites, true, 0);
+    SDL_BlitScaled(plancheSprites, &ghost_in_orange, win_surf, &ghost_orange);
+
 }
 
 
