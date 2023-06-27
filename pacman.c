@@ -1,45 +1,52 @@
 #include <SDL2/SDL.h>
 #include <unistd.h>
-#include <libgen.h> // For dirname function
+#include <libgen.h>
 #include <stdio.h>
 #include <stdbool.h>
 
+// Constants
+#define NUM_WALLS 47
+#define NUM_PELLETS 192
+#define NUM_BIG_PELLETS 4
+
+typedef struct {
+    SDL_Rect rect;
+    SDL_Rect sprites[4];
+    int direction;
+    int count;
+} Ghost;
+
+// Pacgum definition
+typedef struct {
+    SDL_Rect rect;
+    bool eaten;
+} Pellet;
+
+// Super pacgum definition
+typedef struct {
+   SDL_Rect rect;
+   bool eaten;
+} BigPellet;
+
+
+// Window and Surfaces
 SDL_Window* pWindow = NULL;
 SDL_Surface* win_surf = NULL;
 SDL_Surface* plancheSprites = NULL;
 
-// Sprite definition //
 // Background
 SDL_Rect src_bg = { 369, 3, 168, 216 };
 SDL_Rect bg = { 4, 4, 672, 864 };
 SDL_Rect welcome_title = { 4, 4, 180, 46 };
 
 // Ghosts
-SDL_Rect ghost_red_r = { 3, 123, 16, 16 };
-SDL_Rect ghost_red_l = { 37, 123, 16, 16 };
-SDL_Rect ghost_red_d = { 105, 123, 16, 16 };
-SDL_Rect ghost_red_u = { 71, 123, 16, 16 };
-SDL_Rect ghost_red = { 325, 325, 32, 32 };
-
-SDL_Rect ghost_pink_r = { 3, 141, 16, 16 };
-SDL_Rect ghost_pink_l = { 37, 141, 16, 16 };
-SDL_Rect ghost_pink_d = { 105, 141, 16, 16 };
-SDL_Rect ghost_pink_u = { 71, 141, 16, 16 };
-SDL_Rect ghost_pink = { 325, 400, 32, 32 };
-
-SDL_Rect ghost_cyan_r = { 3, 159, 16, 16 };
-SDL_Rect ghost_cyan_l = { 37, 159, 16, 16 };
-SDL_Rect ghost_cyan_d = { 105, 159, 16, 16 };
-SDL_Rect ghost_cyan_u = { 71, 159, 16, 16 };
-SDL_Rect ghost_cyan = { 325, 425, 32, 32 };
-
-SDL_Rect ghost_orange_r = { 3, 177, 16, 16 };
-SDL_Rect ghost_orange_l = { 37, 177, 16, 16 };
-SDL_Rect ghost_orange_d = { 105, 177, 16, 16 };
-SDL_Rect ghost_orange_u = { 71, 177, 16, 16 };
-SDL_Rect ghost_orange = { 325, 380, 32, 32 };
+Ghost ghost_red = { {325, 325, 32, 32}, {{3, 123, 16, 16}, {37, 123, 16, 16}, {105, 123, 16, 16}, {71, 123, 16, 16}}, 0, 0 };
+Ghost ghost_pink = { {325, 400, 32, 32}, {{3, 141, 16, 16}, {37, 141, 16, 16}, {105, 141, 16, 16}, {71, 141, 16, 16}}, 1, 0 };
+Ghost ghost_cyan = { {325, 425, 32, 32}, {{3, 159, 16, 16}, {37, 159, 16, 16}, {105, 159, 16, 16}, {71, 159, 16, 16}}, 1, 0 };
+Ghost ghost_orange = { {325, 380, 32, 32}, {{3, 177, 16, 16}, {37, 177, 16, 16}, {105, 177, 16, 16}, {71, 177, 16, 16}}, 1, 0 };
 
 // Pacman
+SDL_Rect pacman = { 325, 646, 32, 32 };
 SDL_Rect pacman_closed = { 3, 90, 16, 16 };
 SDL_Rect pacman_right = { 20, 90, 16, 16 };
 SDL_Rect pacman_left = { 46, 90, 16, 16 };
@@ -67,79 +74,38 @@ SDL_Rect pacman_death10 = { 143, 105, 11, 14 };
 SDL_Rect bigPellet = { 9, 79, 8, 8 };
 
 // Letters
-SDL_Rect letterA = { 12, 61, 7, 7 };
-SDL_Rect letterB = { 20, 61, 7, 7 };
-SDL_Rect letterC = { 28, 61, 7, 7 };
-SDL_Rect letterD = { 36, 61, 7, 7 };
-SDL_Rect letterE = { 44, 61, 7, 7 };
-SDL_Rect letterF = { 52, 61, 7, 7 };
-SDL_Rect letterG = { 60, 61, 7, 7 };
-SDL_Rect letterH = { 68, 61, 7, 7 };
-SDL_Rect letterI = { 76, 61, 7, 7 };
-SDL_Rect letterJ = { 84, 61, 7, 7 };
-SDL_Rect letterK = { 92, 61, 7, 7 };
-SDL_Rect letterL = { 100, 61, 7, 7 };
-SDL_Rect letterM = { 108, 61, 7, 7 };
-SDL_Rect letterN = { 116, 61, 7, 7 };
-SDL_Rect letterO = { 124, 61, 7, 7 };
-SDL_Rect letterP = { 4, 69, 7, 7 };
-SDL_Rect letterQ = { 12, 69, 7, 7 };
-SDL_Rect letterR = { 20, 69, 7, 7 };
-SDL_Rect letterS = { 28, 69, 7, 7 };
-SDL_Rect letterT = { 36, 69, 7, 7 };
-SDL_Rect letterU = { 44, 69, 7, 7 };
-SDL_Rect letterV = { 52, 69, 7, 7 };
-SDL_Rect letterW = { 60, 69, 7, 7 };
-SDL_Rect letterX = { 68, 69, 7, 7 };
-SDL_Rect letterY = { 76, 69, 7, 7 };
-SDL_Rect letterZ = { 84, 69, 7, 7 };
+SDL_Rect letters[26] = {
+    { 12, 61, 7, 7 }, { 20, 61, 7, 7 }, { 28, 61, 7, 7 }, { 36, 61, 7, 7 }, { 44, 61, 7, 7 }, { 52, 61, 7, 7 },
+    { 60, 61, 7, 7 }, { 68, 61, 7, 7 }, { 76, 61, 7, 7 }, { 84, 61, 7, 7 }, { 92, 61, 7, 7 }, { 100, 61, 7, 7 },
+    { 108, 61, 7, 7 }, { 116, 61, 7, 7 }, { 124, 61, 7, 7 }, { 4, 69, 7, 7 }, { 12, 69, 7, 7 }, { 20, 69, 7, 7 },
+    { 28, 69, 7, 7 }, { 36, 69, 7, 7 }, { 44, 69, 7, 7 }, { 52, 69, 7, 7 }, { 60, 69, 7, 7 }, { 68, 69, 7, 7 },
+    { 76, 69, 7, 7 }, { 84, 69, 7, 7 }
+};
 
 // Numbers
-SDL_Rect number0 = { 4, 53, 7, 7 };
-SDL_Rect number1 = { 12, 53, 7, 7 };
-SDL_Rect number2 = { 20, 53, 7, 7 };
-SDL_Rect number3 = { 28, 53, 7, 7 };
-SDL_Rect number4 = { 36, 53, 7, 7 };
-SDL_Rect number5 = { 44, 53, 7, 7 };
-SDL_Rect number6 = { 52, 53, 7, 7 };
-SDL_Rect number7 = { 60, 53, 7, 7 };
-SDL_Rect number8 = { 68, 53, 7, 7 };
-SDL_Rect number9 = { 76, 53, 7, 7 };
+SDL_Rect numbers[10] = {
+    { 4, 53, 7, 7 }, { 12, 53, 7, 7 }, { 20, 53, 7, 7 }, { 28, 53, 7, 7 }, { 36, 53, 7, 7 },
+    { 44, 53, 7, 7 }, { 52, 53, 7, 7 }, { 60, 53, 7, 7 }, { 68, 53, 7, 7 }, { 76, 53, 7, 7 }
+};
 
-// Other caracteres
+// Other characters
 SDL_Rect tiret = { 84, 53, 7, 7 };
 SDL_Rect exclamation = { 101, 52, 7, 7 };
 SDL_Rect espace = { 115, 52, 7, 7 };
 
 // Global variables
-SDL_Rect pacman = { 325, 646, 32, 32 };
 int lifes = 3;
 int score = 0;
 int highscore = 0;
-
 bool isPelletEaten = false;
 bool isBigPelletEaten = false;
 bool gameWon = false;
 bool gameLost = false;
 bool isWideOpen = false;
 
-int count_red;
-int count_pink;
-int count_cyan;
-int count_orange;
-
-int direction_red = 0; // Initial direction (0: left)
-int direction_pink = 1; // Initial direction (1: up)
-int direction_cyan = 1; // Initial direction (1: up)
-int direction_orange = 1; // Initial direction (1: up)
-
 Uint32 lastAnimationChangeTime = 0;
 int animationDelay = 200;
 int lastDirection = -1;
-
-#define NUM_WALLS 47
-#define NUM_PELLETS 192
-#define NUM_BIG_PELLETS 4
 
 // Wall placement
 SDL_Rect walls[NUM_WALLS] = {
@@ -220,12 +186,6 @@ SDL_Rect walls[NUM_WALLS] = {
    { 266, 458, 148, 20 },  // Bottom wall};
 
 };
-
-// Pacgum definition
-typedef struct {
-    SDL_Rect rect;
-    bool eaten;
-} Pellet;
 
 // Pacgum placement
 Pellet pellets[NUM_PELLETS] = {
@@ -442,12 +402,6 @@ Pellet pellets[NUM_PELLETS] = {
 
 };
 
-// Super pacgum definition
-typedef struct {
-   SDL_Rect rect;
-   bool eaten;
-} BigPellet;
-
 // Super pacgum placement
 BigPellet bigPellets[NUM_BIG_PELLETS] = {
    { { 45, 108, 27, 27 }, false },
@@ -458,7 +412,9 @@ BigPellet bigPellets[NUM_BIG_PELLETS] = {
 
 // DIsplay titles
 void display_highscore_title(){
-    SDL_Rect highscoreLetters[9] = { letterH, letterI, letterG, letterH, letterS, letterC, letterO, letterR, letterE };
+    SDL_Rect highscoreLetters[9] = { letters[7], letters[8], letters[6], letters[7], letters[18],
+    letters[2], letters[14], letters[17], letters[4]
+    };
     SDL_Rect posInit = { 720, 30, 25, 25 }; // Position initiale de la lettre "H"
     int x = posInit.x;
     for (int i = 0; i < 9; i++) {
@@ -467,8 +423,9 @@ void display_highscore_title(){
         x += 30; // Augmenter x de 30 pour la position de la lettre suivante
     }
 }
+
 void display_score_title(){
-    SDL_Rect lettersScore[5] = { letterS, letterC, letterO, letterR, letterE };
+    SDL_Rect lettersScore[5] = { letters[18], letters[2], letters[14], letters[17], letters[4]};
     SDL_Rect posInit = { 720, 200, 25, 25 }; // Position initiale de la lettre "S"
     int x = posInit.x;
     for (int i = 0; i < 5; i++) {
@@ -483,34 +440,39 @@ void display_game_score() {
     int scoreToDisplay = score;
     int x = 820;
     int y = 250;
-    SDL_Rect number[10] = {number0, number1, number2, number3, number4, number5, number6, number7, number8, number9};
+    SDL_Rect number[10] = {numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5],
+    numbers[6], numbers[7], numbers[8], number[9]};
     while (scoreToDisplay > 0) {
         int digit = scoreToDisplay % 10;
-        SDL_Rect numberToDisplay = number[digit];
+        SDL_Rect numberToDisplay = numbers[digit];
 
         SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &(SDL_Rect){x, y, 25, 25});
         scoreToDisplay /= 10;
         x -= 25;
     }
     if (score == 0) {
-        SDL_BlitScaled(plancheSprites, &number0, win_surf, &(SDL_Rect){x, y, 25, 25});
+        SDL_BlitScaled(plancheSprites, &numbers[0], win_surf, &(SDL_Rect){x, y, 25, 25});
     }
 }
+
 void display_game_highscore() {
     int highscoreToDisplay = highscore;
     int x = 820;
     int y = 80;
-    SDL_Rect number[10] = {number0, number1, number2, number3, number4, number5, number6, number7, number8, number9};
+    SDL_Rect numbers[10] = {
+        numbers[0], numbers[1], numbers[2], numbers[3], numbers[4],
+        numbers[5], numbers[6], numbers[7], numbers[8], numbers[9]
+    };
     while (highscoreToDisplay > 0) {
         int digit = highscoreToDisplay % 10;
-        SDL_Rect numberToDisplay = number[digit];
+        SDL_Rect numberToDisplay = numbers[digit];
 
         SDL_BlitScaled(plancheSprites, &numberToDisplay, win_surf, &(SDL_Rect){x, y, 25, 25});
         highscoreToDisplay /= 10;
         x -= 25;
     }
     if (highscore == 0) {
-        SDL_BlitScaled(plancheSprites, &number0, win_surf, &(SDL_Rect){x, y, 25, 25});
+        SDL_BlitScaled(plancheSprites, &numbers[0], win_surf, &(SDL_Rect){x, y, 25, 25});
     }
 }
 
@@ -549,18 +511,18 @@ void draw_all_pellets(){
 void respawn(){
 
     // Reset the position of pacman and the ghost
-    ghost_red = (SDL_Rect){ 325, 325, 32, 32 };
-    ghost_pink = (SDL_Rect){ 325, 400, 32, 32 };
-    ghost_cyan = (SDL_Rect){ 325, 425, 32, 32 };
-    ghost_orange = (SDL_Rect){ 325, 400, 32, 32 };
+    ghost_red.rect = (SDL_Rect){ 325, 325, 32, 32 };
+    ghost_pink.rect = (SDL_Rect){ 325, 400, 32, 32 };
+    ghost_cyan.rect = (SDL_Rect){ 325, 425, 32, 32 };
+    ghost_orange.rect = (SDL_Rect){ 325, 400, 32, 32 };
 
     pacman = (SDL_Rect){ 325, 646, 32, 32 }; // Position initiale de Pacman
     lastDirection = -1;
 
-    direction_red = 0;
-    direction_pink = 1;
-    direction_cyan = 1;
-    direction_orange = 1;
+    ghost_red.direction = 0;
+    ghost_pink.direction = 1;
+    ghost_cyan.direction = 1;
+    ghost_orange.direction = 1;
 
     SDL_Delay(1000);
 }
@@ -579,7 +541,7 @@ void animatePacmanDeath(SDL_Surface* win_surf, SDL_Surface* plancheSprites, int 
         if (currentTime - lastAnimationChangeTime >= animationDelay) {
             lastAnimationChangeTime = currentTime;
             currentFrame++;
-            
+
             SDL_FillRect(win_surf, &PacmanPos, SDL_MapRGB(win_surf->format, 0, 0, 0));
             SDL_BlitScaled(plancheSprites, &pacmanDeath[currentFrame], win_surf, &PacmanPos);
             SDL_UpdateWindowSurface(pWindow);
@@ -589,10 +551,10 @@ void animatePacmanDeath(SDL_Surface* win_surf, SDL_Surface* plancheSprites, int 
 
 void CheckCollisionWithGhost(SDL_Rect pacman) {
     // Check collision with each ghost individually
-    if (SDL_HasIntersection(&pacman, &ghost_red) == SDL_TRUE ||
-        SDL_HasIntersection(&pacman, &ghost_pink) == SDL_TRUE ||
-        SDL_HasIntersection(&pacman, &ghost_cyan) == SDL_TRUE ||
-        SDL_HasIntersection(&pacman, &ghost_orange) == SDL_TRUE) {
+    if (SDL_HasIntersection(&pacman, (SDL_Rect*)&ghost_red) == SDL_TRUE ||
+        SDL_HasIntersection(&pacman, (SDL_Rect*)&ghost_pink) == SDL_TRUE ||
+        SDL_HasIntersection(&pacman, (SDL_Rect*)&ghost_cyan) == SDL_TRUE ||
+        SDL_HasIntersection(&pacman, (SDL_Rect*)&ghost_orange) == SDL_TRUE) {
 
         lifes--;
         if (lifes < 1) {
@@ -726,10 +688,10 @@ void moveGhosts()
     };
 
     struct GhostData ghostsData[] = {
-        { &ghost_red, &direction_red, { &ghost_red_l, &ghost_red_u, &ghost_red_r, &ghost_red_d }, &count_red },
-        { &ghost_pink, &direction_pink, { &ghost_pink_l, &ghost_pink_u, &ghost_pink_r, &ghost_pink_d }, &count_pink },
-        { &ghost_cyan, &direction_cyan, { &ghost_cyan_l, &ghost_cyan_u, &ghost_cyan_r, &ghost_cyan_d }, &count_cyan },
-        { &ghost_orange, &direction_orange, { &ghost_orange_l, &ghost_orange_u, &ghost_orange_r, &ghost_orange_d }, &count_orange }
+        { &ghost_red.rect, &ghost_red.direction, { &ghost_red.sprites[0], &ghost_red.sprites[1], &ghost_red.sprites[2], &ghost_red.sprites[3] }, &ghost_red.count },
+        { &ghost_pink.rect, &ghost_pink.direction, { &ghost_pink.sprites[0], &ghost_pink.sprites[1], &ghost_pink.sprites[2], &ghost_pink.sprites[3] }, &ghost_pink.count },
+        { &ghost_cyan.rect, &ghost_cyan.direction, { &ghost_cyan.sprites[0], &ghost_cyan.sprites[1], &ghost_cyan.sprites[2], &ghost_cyan.sprites[3] }, &ghost_cyan.count },
+        { &ghost_orange.rect, &ghost_orange.direction, { &ghost_orange.sprites[0], &ghost_orange.sprites[1], &ghost_orange.sprites[2], &ghost_orange.sprites[3] }, &ghost_orange.count }
     };
 
     for (int i = 0; i < sizeof(ghostsData) / sizeof(ghostsData[0]); i++)
@@ -793,24 +755,9 @@ void moveGhosts()
     }
 }
 
-void draw()
+void updatePacman()
 {
-    SDL_SetColorKey(plancheSprites, false, 0);
-    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
-
-    display_highscore_title();
-    display_score_title();
-    display_game_score();
-    display_game_highscore();
-    display_lifes(lifes);
-
-    draw_all_pellets();
-
-        // Check collision with ghost and update lifes
-    CheckCollisionWithGhost(pacman);
-    moveGhosts();
-
-    // Check if pacman enter tunnel, teleport him to the other side
+        // Check if pacman enter tunnel, teleport him to the other side
     if (pacman.x < 10)
     {
         pacman.x = 645;
@@ -905,7 +852,25 @@ void draw()
     {
         pacman = nextPosition;
     }
+}
 
+void draw()
+{
+    SDL_SetColorKey(plancheSprites, false, 0);
+    SDL_BlitScaled(plancheSprites, &src_bg, win_surf, &bg);
+
+    display_highscore_title();
+    display_score_title();
+    display_game_score();
+    display_game_highscore();
+    display_lifes(lifes);
+
+    draw_all_pellets();
+
+        // Check collision with ghost and update lifes
+    CheckCollisionWithGhost(pacman);
+    moveGhosts();
+    updatePacman();
 }
 
 // Draw the start menu
@@ -921,14 +886,14 @@ void drawStartMenu(SDL_Surface* surface) {
 
     // Afficher les choix "Play -P" et "Quit -Q"
     SDL_Rect playPos = { surface->w / 2 - ((30*7)/2), surface->h / 2 - 50, 25, 25 };
-    SDL_Rect playLetters[7] = { letterP, letterL, letterA, letterY, espace, tiret, letterP };
+    SDL_Rect playLetters[7] = { letters[15], letters[4], letters[11], letters[24], espace, tiret, letters[15] };
     for (int i = 0; i < 7; i++) {
         SDL_BlitScaled(plancheSprites, &playLetters[i], surface, &playPos);
         playPos.x += 30;
     }
 
     SDL_Rect quitPos = { surface->w / 2 - ((30*7)/2), surface->h / 2 - 0, 25, 25 };
-    SDL_Rect quitLetters[7] = { letterQ, letterU, letterI, letterT, espace, tiret, letterQ };
+    SDL_Rect quitLetters[7] = { letters[16], letters[20], letters[8], letters[19], espace, tiret, letters[16] };
     for (int i = 0; i < 7; i++) {
         SDL_BlitScaled(plancheSprites, &quitLetters[i], surface, &quitPos);
         quitPos.x += 30;
@@ -936,16 +901,16 @@ void drawStartMenu(SDL_Surface* surface) {
 
     // Display all 4 ghosts sprites at the bottom of the screen
     SDL_Rect ghost_red_pos = { surface->w / 2 - 160, surface->h / 2 + 100, 32, 32 };
-    SDL_BlitScaled(plancheSprites, &ghost_red_l, surface, &ghost_red_pos);
+    SDL_BlitScaled(plancheSprites, &ghost_red.sprites[ghost_red.direction], surface, &ghost_red_pos);
 
     SDL_Rect ghost_pink_pos = { surface->w / 2 - 60, surface->h / 2 + 100, 32, 32 };
-    SDL_BlitScaled(plancheSprites, &ghost_pink_l, surface, &ghost_pink_pos);
+    SDL_BlitScaled(plancheSprites, &ghost_pink.sprites[ghost_pink.direction], surface, &ghost_pink_pos);
 
     SDL_Rect ghost_cyan_pos = { surface->w / 2 + 40, surface->h / 2 + 100, 32, 32 };
-    SDL_BlitScaled(plancheSprites, &ghost_cyan_l, surface, &ghost_cyan_pos);
+    SDL_BlitScaled(plancheSprites, &ghost_cyan.sprites[ghost_cyan.direction], surface, &ghost_cyan_pos);
 
     SDL_Rect ghost_orange_pos = { surface->w / 2 + 140, surface->h / 2 + 100, 32, 32 };
-    SDL_BlitScaled(plancheSprites, &ghost_orange_l, surface, &ghost_orange_pos);
+    SDL_BlitScaled(plancheSprites, &ghost_orange.sprites[ghost_orange.direction], surface, &ghost_orange_pos);
 }
 // Draw the end menu
 void drawEndMenu(SDL_Surface* surface, bool gameLost) {
@@ -955,14 +920,14 @@ void drawEndMenu(SDL_Surface* surface, bool gameLost) {
     // Afficher le message "You Win!" ou "You Lost!"
     if (!gameLost) {
         SDL_Rect youWinPos = { surface->w / 2 - 120, surface->h / 2 - 200, 25, 25 };
-        SDL_Rect youWinLetters[9] = { letterY, letterO, letterU, espace, letterW, letterI, letterN, espace, exclamation };
+        SDL_Rect youWinLetters[9] = { letters[24], letters[14], letters[20], espace, letters[22], letters[8], letters[13], espace, exclamation };
         for (int i = 0; i < 9; i++) {
             SDL_BlitScaled(plancheSprites, &youWinLetters[i], surface, &youWinPos);
             youWinPos.x += 30;
         }
     } else {
         SDL_Rect youLostPos = { surface->w / 2 - 120, surface->h / 2 - 200, 25, 25 };
-        SDL_Rect youLostLetters[10] = { letterY, letterO, letterU, espace, letterL, letterO, letterS, letterT, espace, exclamation };
+        SDL_Rect youLostLetters[10] = { letters[24], letters[14], letters[20], espace, letters[11], letters[14], letters[18], letters[19], espace, exclamation };
         for (int i = 0; i < 10; i++) {
             SDL_BlitScaled(plancheSprites, &youLostLetters[i], surface, &youLostPos);
             youLostPos.x += 30;
@@ -971,21 +936,25 @@ void drawEndMenu(SDL_Surface* surface, bool gameLost) {
 
     // Afficher les choix "Try again - T", Return to menu - R" et "Quit - Q"
     SDL_Rect tryAgainPos = { surface->w / 2 - 170, surface->h / 2 - 50, 25, 25 };
-    SDL_Rect tryAgainLetters[12] = { letterT, letterR, letterY, espace, letterA, letterG, letterA, letterI, letterN, espace, tiret, letterT};
+    SDL_Rect tryAgainLetters[12] = { letters[19], letters[17], letters[24], espace, letters[0], letters[6], letters[0], letters[8], letters[13], espace, tiret, letters[19]};
     for (int i = 0; i < 12; i++) {
         SDL_BlitScaled(plancheSprites, &tryAgainLetters[i], surface, &tryAgainPos);
         tryAgainPos.x += 30;
     }
 
     SDL_Rect returnToMenuPos = { surface->w / 2 - 245, surface->h / 2 - 0, 25, 25 };
-    SDL_Rect returnToMenuLetters[18] = { letterR, letterE, letterT, letterU, letterR, letterN, espace, letterT, letterO, espace, letterM, letterE, letterN, letterU, espace, tiret, letterR, };
+    SDL_Rect returnToMenuLetters[18] = { letters[17], letters[4], letters[19], letters[20], letters[17],
+        letters[13], espace, letters[19], letters[14], espace, letters[12], letters[4], letters[13],
+        letters[20], espace, tiret, letters[17]
+    };
+
     for (int i = 0; i < 18; i++) {
         SDL_BlitScaled(plancheSprites, &returnToMenuLetters[i], surface, &returnToMenuPos);
         returnToMenuPos.x += 30;
     }
 
     SDL_Rect quitPos = { surface->w / 2 - 100, surface->h / 2 + 50, 25, 25 };
-    SDL_Rect quitLetters[7] = { letterQ, letterU, letterI, letterT, espace, tiret, letterQ };
+    SDL_Rect quitLetters[7] = { letters[16], letters[20], letters[8], letters[19], espace, tiret, letters[16] };
     for (int i = 0; i < 7; i++) {
         SDL_BlitScaled(plancheSprites, &quitLetters[i], surface, &quitPos);
         quitPos.x += 30;
@@ -1035,16 +1004,16 @@ void restartGame()
     pacman = (SDL_Rect){332, 642, 32, 32}; // Reset Pacman's position
 
     // Reset the ghosts' positions
-    ghost_red = (SDL_Rect){ 325, 325, 32, 32 };
-    ghost_pink = (SDL_Rect){ 325, 400, 32, 32 };
-    ghost_cyan = (SDL_Rect){ 325, 425, 32, 32 };
-    ghost_orange = (SDL_Rect){ 325, 400, 32, 32 };
+    ghost_red.rect = (SDL_Rect){ 325, 325, 32, 32 };
+    ghost_pink.rect = (SDL_Rect){ 325, 400, 32, 32 };
+    ghost_cyan.rect = (SDL_Rect){ 325, 425, 32, 32 };
+    ghost_orange.rect = (SDL_Rect){ 325, 400, 32, 32 };
 
     // Reset the ghosts' directions
-    direction_red = 0;
-    direction_pink = 1;
-    direction_cyan = 1;
-    direction_orange = 1;
+    ghost_red.direction = 0;
+    ghost_pink.direction = 1;
+    ghost_cyan.direction = 1;
+    ghost_orange.direction = 1;
 
     // Reset the eaten state of all pellets
     for (int i = 0; i < NUM_PELLETS; i++)
@@ -1062,7 +1031,7 @@ void gameLoop()
     bool quit = false;
     bool restart = false;
     bool startMenu = true;
-    
+
     while (!quit)
     {
         // Display the start menu
