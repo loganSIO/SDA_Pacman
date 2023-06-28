@@ -17,10 +17,10 @@ Navigate to the project's build directory in the terminal.
 
 Run the CMake command to a newly created build folder in the project:
 
-mkdir build
-cdbuild
-cmake ..
-cmake --build .
+    -mkdir build
+    -cdbuild
+    -cmake ..
+    -cmake --build .
 
 After successful compilation, execute the Pacman game by running the following command:
 
